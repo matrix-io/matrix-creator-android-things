@@ -28,6 +28,7 @@ import com.google.android.things.pio.SpiDevice;
 import java.io.IOException;
 import java.util.List;
 
+import admobilize.matrix.gt.matrix.Humidity;
 import admobilize.matrix.gt.matrix.Pressure;
 import admobilize.matrix.gt.matrix.UV;
 import admobilize.matrix.gt.matrix.Wishbone;
@@ -55,6 +56,7 @@ public class MainActivity extends Activity {
     private Wishbone wb;
     private UV uvSensor;
     private Pressure pressure;
+    private Humidity humidity;
 
 
     @Override
@@ -95,7 +97,8 @@ public class MainActivity extends Activity {
 
             wb=new Wishbone(spiDevice);
             uvSensor = new UV(wb);
-            pressure =new Pressure(wb);
+            pressure = new Pressure(wb);
+            humidity = new Humidity(wb);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -117,6 +120,10 @@ public class MainActivity extends Activity {
                 output=output+"ALT: "+ pressure.getAltitude()+"\t";
                 output=output+"PRS: "+ pressure.getPressure()+"\t";
                 output=output+"TEM: "+ pressure.getTemperature()+"\t";
+                // Read Humidity device values
+                humidity.read();
+                output=output+"HUM: "+ humidity.getHumidity()+"\t";
+                output=output+"TEM: "+ humidity.getTemperature()+"\t";
 
                 if(DEBUG)Log.i(TAG,output);
 
