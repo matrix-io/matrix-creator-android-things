@@ -28,6 +28,9 @@ import com.google.android.things.pio.SpiDevice;
 import java.io.IOException;
 import java.util.List;
 
+import admobilize.matrix.gt.matrix.SensorUV;
+import admobilize.matrix.gt.matrix.Wishbone;
+
 /**
  * Sample usage of the Matrix-Creator sensors and GPIO calls
  *
@@ -126,21 +129,15 @@ public class MainActivity extends Activity {
         // Remove pending blink Runnable from the handler.
         mHandler.removeCallbacks(mPollingRunnable);
         // Close the Gpio pin.
-        if(DEBUG)Log.i(TAG, "Closing LED GPIO pin");
+        if(DEBUG)Log.i(TAG, "Closing devices and GPIO");
         try {
             mLedGpio.close();
+            spiDevice.close();
         } catch (IOException e) {
             Log.e(TAG, "Error on PeripheralIO API", e);
         } finally {
             mLedGpio = null;
-        }
-        if (spiDevice != null) {
-            try {
-                spiDevice.close();
-                spiDevice = null;
-            } catch (IOException e) {
-                Log.w(TAG, "Unable to close SPI device", e);
-            }
+            spiDevice = null;
         }
     }
 
