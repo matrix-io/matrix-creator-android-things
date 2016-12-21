@@ -102,12 +102,14 @@ public class MainActivity extends Activity {
                 return;
             }
             try {
-                // Toggle the GPIO state
+                String output="";
+                // Toggle the GPIO stateA
                 mLedGpio.setValue(!mLedGpio.getValue());
-                if(DEBUG)Log.d(TAG, "State set to " + mLedGpio.getValue());
+                output="LED:" + mLedGpio.getValue()+"\t";
                 // Read UVsensor
-                if(DEBUG)Log.d(TAG, "UVSensor: "+UVSensor.read());
+                output=output+"UV: "+UVSensor.read()+"\t";
 
+                if(DEBUG)Log.i(TAG,output);
 //                wb.SpiRead((short) (0x3800+(0x90 >> 1)),data,8); // MCU
                 // Reschedule the same runnable in {#INTERVAL_POLLING_MS} milliseconds
                 mHandler.postDelayed(mPollingRunnable, INTERVAL_POLLING_MS);
