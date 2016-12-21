@@ -1,4 +1,4 @@
-package admobilize.matrix.gt;
+package admobilize.matrix.gt.matrix;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;

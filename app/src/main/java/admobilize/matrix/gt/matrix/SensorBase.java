@@ -1,4 +1,4 @@
-package admobilize.matrix.gt;
+package admobilize.matrix.gt.matrix;
 
 /**
  * Created by Antonio Vanegas @hpsaturn on 12/20/16.
