@@ -7,9 +7,9 @@ import java.nio.ByteOrder;
  * Created by Antonio Vanegas @hpsaturn on 12/20/16.
  */
 
-public class SensorUV extends SensorBase {
+public class UVSensor extends SensorBase {
 
-    public SensorUV(Wishbone wb) {
+    public UVSensor(Wishbone wb) {
         super(wb);
     }
 
