@@ -28,8 +28,8 @@ import com.google.android.things.pio.SpiDevice;
 import java.io.IOException;
 import java.util.List;
 
-import admobilize.matrix.gt.matrix.PressureSensor;
-import admobilize.matrix.gt.matrix.UVSensor;
+import admobilize.matrix.gt.matrix.Pressure;
+import admobilize.matrix.gt.matrix.UV;
 import admobilize.matrix.gt.matrix.Wishbone;
 
 /**
@@ -53,8 +53,8 @@ public class MainActivity extends Activity {
     private Gpio mLedGpio;
     private SpiDevice spiDevice;
     private Wishbone wb;
-    private UVSensor UVSensor;
-    private PressureSensor pressure;
+    private UV uvSensor;
+    private Pressure pressure;
 
 
     @Override
@@ -94,8 +94,8 @@ public class MainActivity extends Activity {
             spiDevice.setBitJustification(false); // MSB first
 
             wb=new Wishbone(spiDevice);
-            UVSensor= new UVSensor(wb);
-            pressure =new PressureSensor(wb);
+            uvSensor = new UV(wb);
+            pressure =new Pressure(wb);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -108,12 +108,10 @@ public class MainActivity extends Activity {
             // Exit Runnable if devices is already closed
             if (mLedGpio == null || wb == null) return;
             try {
-                String output;
-                // Toggle the GPIO stateA
                 mLedGpio.setValue(!mLedGpio.getValue());
-                output="LED:" + mLedGpio.getValue()+"\t";
+                String output;
                 // Read UVsensor
-                output=output+"UV: "+UVSensor.read()+"\t";
+                output="UV: "+ uvSensor.read()+"\t";
                 // Read Pressure device values
                 pressure.read();
                 output=output+"ALT: "+ pressure.getAltitude()+"\t";
