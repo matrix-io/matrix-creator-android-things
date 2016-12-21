@@ -26,9 +26,6 @@ import com.google.android.things.pio.PeripheralManagerService;
 import com.google.android.things.pio.SpiDevice;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -46,14 +43,13 @@ public class MainActivity extends Activity {
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final boolean DEBUG = Config.DEBUG;
 
-    private static final int INTERVAL_BETWEEN_BLINKS_MS = 1000;
+    private static final int INTERVAL_POLLING_MS = 1000;
 
     private Handler mHandler = new Handler();
     private Gpio mLedGpio;
-    private SpiDevice mDevice;
-
+    private SpiDevice spiDevice;
     private Wishbone wb;
-    private byte[] data = new byte[8];
+    private SensorUV UVSensor;
 
 
     @Override
@@ -63,20 +59,16 @@ public class MainActivity extends Activity {
         PeripheralManagerService service = new PeripheralManagerService();
         configSPI(service);
         configGPIO(service);
-
-
+        // Runnable that continuously update sensors and LED (Matrix LED on GPIO21)
+        mHandler.post(mPollingRunnable);
     }
 
     private void configGPIO(PeripheralManagerService service){
         try {
-
             String pinName = BoardDefaults.getGPIOForLED();
             mLedGpio = service.openGpio(pinName);
             mLedGpio.setDirection(Gpio.DIRECTION_OUT_INITIALLY_LOW);
             Log.i(TAG, "Start blinking LED GPIO pin");
-            // Post a Runnable that continuously switch the state of the GPIO, blinking the
-            // corresponding LED
-            mHandler.post(mBlinkRunnable);
         } catch (IOException e) {
             Log.e(TAG, "Error on PeripheralIO API", e);
         }
@@ -90,47 +82,19 @@ public class MainActivity extends Activity {
             } else {
                 Log.i(TAG, "List of available devices: " + deviceList);
             }
-            mDevice = service.openSpiDevice(BoardDefaults.getSpiBus());
-            // Low clock, leading edge transfer
-            mDevice.setMode(SpiDevice.MODE3);
-
-            mDevice.setFrequency(18000000);     // 18MHz
-            mDevice.setBitsPerWord(8);          // 8 BPW
-            mDevice.setBitJustification(false); // MSB first
-
-            wb=new Wishbone(mDevice);
-
+            spiDevice = service.openSpiDevice(BoardDefaults.getSpiBus());
+            spiDevice.setMode(SpiDevice.MODE3);
+            spiDevice.setFrequency(18000000);     // 18MHz
+            spiDevice.setBitsPerWord(8);          // 8 BPW
+            spiDevice.setBitJustification(false); // MSB first
+            wb=new Wishbone(spiDevice);
+            UVSensor= new SensorUV(wb);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        // Remove pending blink Runnable from the handler.
-        mHandler.removeCallbacks(mBlinkRunnable);
-        // Close the Gpio pin.
-        Log.i(TAG, "Closing LED GPIO pin");
-        try {
-            mLedGpio.close();
-        } catch (IOException e) {
-            Log.e(TAG, "Error on PeripheralIO API", e);
-        } finally {
-            mLedGpio = null;
-        }
-        if (mDevice != null) {
-            try {
-                mDevice.close();
-                mDevice = null;
-            } catch (IOException e) {
-                Log.w(TAG, "Unable to close SPI device", e);
-            }
-        }
-    }
-
-    private Runnable mBlinkRunnable = new Runnable() {
+    private Runnable mPollingRunnable = new Runnable() {
         @Override
         public void run() {
             // Exit Runnable if the GPIO is already closed
@@ -140,19 +104,42 @@ public class MainActivity extends Activity {
             try {
                 // Toggle the GPIO state
                 mLedGpio.setValue(!mLedGpio.getValue());
-                Log.d(TAG, "State set to " + mLedGpio.getValue());
+                if(DEBUG)Log.d(TAG, "State set to " + mLedGpio.getValue());
+                // Read UVsensor
+                if(DEBUG)Log.d(TAG, "UVSensor: "+UVSensor.read());
 
-                // Reschedule the same runnable in {#INTERVAL_BETWEEN_BLINKS_MS} milliseconds
-                mHandler.postDelayed(mBlinkRunnable, INTERVAL_BETWEEN_BLINKS_MS);
-
-                wb.SpiRead((short) (0x3800+(0x00 >> 1)),data,4); // UV
 //                wb.SpiRead((short) (0x3800+(0x90 >> 1)),data,8); // MCU
-                if(DEBUG)Log.d(TAG,"DATA: "+Arrays.toString(data));
-                if(DEBUG)Log.d(TAG,"CONV: "+ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN).getFloat());
+                // Reschedule the same runnable in {#INTERVAL_POLLING_MS} milliseconds
+                mHandler.postDelayed(mPollingRunnable, INTERVAL_POLLING_MS);
 
             } catch (IOException e) {
                 Log.e(TAG, "Error on PeripheralIO API", e);
             }
         }
     };
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // Remove pending blink Runnable from the handler.
+        mHandler.removeCallbacks(mPollingRunnable);
+        // Close the Gpio pin.
+        if(DEBUG)Log.i(TAG, "Closing LED GPIO pin");
+        try {
+            mLedGpio.close();
+        } catch (IOException e) {
+            Log.e(TAG, "Error on PeripheralIO API", e);
+        } finally {
+            mLedGpio = null;
+        }
+        if (spiDevice != null) {
+            try {
+                spiDevice.close();
+                spiDevice = null;
+            } catch (IOException e) {
+                Log.w(TAG, "Unable to close SPI device", e);
+            }
+        }
+    }
+
 }
