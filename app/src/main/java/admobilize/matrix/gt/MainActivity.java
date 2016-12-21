@@ -28,7 +28,8 @@ import com.google.android.things.pio.SpiDevice;
 import java.io.IOException;
 import java.util.List;
 
-import admobilize.matrix.gt.matrix.SensorUV;
+import admobilize.matrix.gt.matrix.PressureSensor;
+import admobilize.matrix.gt.matrix.UVSensor;
 import admobilize.matrix.gt.matrix.Wishbone;
 
 /**
@@ -52,13 +53,14 @@ public class MainActivity extends Activity {
     private Gpio mLedGpio;
     private SpiDevice spiDevice;
     private Wishbone wb;
-    private SensorUV UVSensor;
+    private UVSensor UVSensor;
+    private PressureSensor pressure;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.i(TAG, "Starting BlinkActivity");
+        if(DEBUG)Log.i(TAG, "Starting Matrix-Creator device config..");
         PeripheralManagerService service = new PeripheralManagerService();
         configSPI(service);
         configGPIO(service);
@@ -90,8 +92,11 @@ public class MainActivity extends Activity {
             spiDevice.setFrequency(18000000);     // 18MHz
             spiDevice.setBitsPerWord(8);          // 8 BPW
             spiDevice.setBitJustification(false); // MSB first
+
             wb=new Wishbone(spiDevice);
-            UVSensor= new SensorUV(wb);
+            UVSensor= new UVSensor(wb);
+            pressure =new PressureSensor(wb);
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -100,20 +105,23 @@ public class MainActivity extends Activity {
     private Runnable mPollingRunnable = new Runnable() {
         @Override
         public void run() {
-            // Exit Runnable if the GPIO is already closed
-            if (mLedGpio == null || wb == null) {
-                return;
-            }
+            // Exit Runnable if devices is already closed
+            if (mLedGpio == null || wb == null) return;
             try {
-                String output="";
+                String output;
                 // Toggle the GPIO stateA
                 mLedGpio.setValue(!mLedGpio.getValue());
                 output="LED:" + mLedGpio.getValue()+"\t";
                 // Read UVsensor
                 output=output+"UV: "+UVSensor.read()+"\t";
+                // Read Pressure device values
+                pressure.read();
+                output=output+"ALT: "+ pressure.getAltitude()+"\t";
+                output=output+"PRS: "+ pressure.getPressure()+"\t";
+                output=output+"TEM: "+ pressure.getTemperature()+"\t";
 
                 if(DEBUG)Log.i(TAG,output);
-//                wb.SpiRead((short) (0x3800+(0x90 >> 1)),data,8); // MCU
+
                 // Reschedule the same runnable in {#INTERVAL_POLLING_MS} milliseconds
                 mHandler.postDelayed(mPollingRunnable, INTERVAL_POLLING_MS);
 
@@ -126,9 +134,8 @@ public class MainActivity extends Activity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        // Remove pending blink Runnable from the handler.
+        // Remove pending polling Runnable from the handler.
         mHandler.removeCallbacks(mPollingRunnable);
-        // Close the Gpio pin.
         if(DEBUG)Log.i(TAG, "Closing devices and GPIO");
         try {
             mLedGpio.close();
