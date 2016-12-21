@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.util.List;
 
 import admobilize.matrix.gt.matrix.Humidity;
+import admobilize.matrix.gt.matrix.IMU;
 import admobilize.matrix.gt.matrix.Pressure;
 import admobilize.matrix.gt.matrix.UV;
 import admobilize.matrix.gt.matrix.Wishbone;
@@ -48,7 +49,7 @@ public class MainActivity extends Activity {
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final boolean DEBUG = Config.DEBUG;
 
-    private static final int INTERVAL_POLLING_MS = 1000;
+    private static final int INTERVAL_POLLING_MS = 50;
 
     private Handler mHandler = new Handler();
     private Gpio mLedGpio;
@@ -57,6 +58,7 @@ public class MainActivity extends Activity {
     private UV uvSensor;
     private Pressure pressure;
     private Humidity humidity;
+    private IMU imuSensor;
 
 
     @Override
@@ -99,6 +101,7 @@ public class MainActivity extends Activity {
             uvSensor = new UV(wb);
             pressure = new Pressure(wb);
             humidity = new Humidity(wb);
+            imuSensor = new IMU(wb);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -117,13 +120,18 @@ public class MainActivity extends Activity {
                 output="UV: "+ uvSensor.read()+"\t";
                 // Read Pressure device values
                 pressure.read();
-                output=output+"ALT: "+ pressure.getAltitude()+"\t";
-                output=output+"PRS: "+ pressure.getPressure()+"\t";
-                output=output+"TEM: "+ pressure.getTemperature()+"\t";
+                output=output+"AL: "+ pressure.getAltitude()+"\t";
+                output=output+"PR: "+ pressure.getPressure()+"\t";
+                output=output+"TP: "+ pressure.getTemperature()+"\t";
                 // Read Humidity device values
                 humidity.read();
-                output=output+"HUM: "+ humidity.getHumidity()+"\t";
-                output=output+"TEM: "+ humidity.getTemperature()+"\t";
+                output=output+"HM: "+ humidity.getHumidity()+"\t";
+                output=output+"TP: "+ humidity.getTemperature()+"\t";
+                // Read IMU device values
+                imuSensor.read();
+                output=output+"YW: "+ imuSensor.getYaw()+"\t";
+                output=output+"PT: "+ imuSensor.getPitch()+"\t";
+                output=output+"RL: "+ imuSensor.getRoll()+"\t";
 
                 if(DEBUG)Log.i(TAG,output);
 
