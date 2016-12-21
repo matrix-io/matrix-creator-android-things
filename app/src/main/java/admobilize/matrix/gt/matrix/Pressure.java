@@ -1,10 +1,7 @@
 package admobilize.matrix.gt.matrix;
 
-import android.util.Log;
-
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.Arrays;
 
 import admobilize.matrix.gt.Config;
 
@@ -12,16 +9,16 @@ import admobilize.matrix.gt.Config;
  * Created by Antonio Vanegas @hpsaturn on 12/20/16.
  */
 
-public class PressureSensor extends SensorBase {
+public class Pressure extends SensorBase {
 
-    private static final String TAG = PressureSensor.class.getSimpleName();
+    private static final String TAG = Pressure.class.getSimpleName();
     private static final boolean DEBUG = Config.DEBUG;
 
     private float altitude;
     private float pressure;
     private float temperature;
 
-    public PressureSensor(Wishbone wb) {
+    public Pressure(Wishbone wb) {
         super(wb);
     }
 
