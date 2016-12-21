@@ -5,6 +5,7 @@ import android.util.Log;
 import com.google.android.things.pio.SpiDevice;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -18,7 +19,7 @@ public class Wishbone {
     private static final boolean DEBUG = Config.DEBUG;
 
     private byte[] tx_buffer_ = new byte[4096];
-    private byte[] rx_buffer_ = new byte[4096];
+    private byte[] rx_buffer_ = new byte[16];
 
 
     private final Lock _mutex = new ReentrantLock(true);
@@ -91,7 +92,7 @@ public class Wishbone {
 
     public Boolean SpiRead(short add, byte[] data, int length) {
         for (short w = 0; w < (length / 2); w++) {
-            if(DEBUG) Log.d(TAG,"spiRead word:"+w);
+//            if(DEBUG) Log.d(TAG,"spiRead word:"+w);
             if (!SpiRead16((short)(add + w),data, w)) return false;
         }
         return true;
