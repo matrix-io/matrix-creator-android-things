@@ -64,7 +64,7 @@ public class Wishbone {
             tx_buffer_[1] = WR1(add, inc);
             System.arraycopy(data,0,tx_buffer_,2,2);
 //          memcpy(&tx_buffer_[2], data, 2);
-            spiTransfer(spiDevice,tx_buffer_);
+            spiTransfer(spiDevice,tx_buffer_,rx_buffer_,4);
             return true;
         } catch (IOException e) {
             e.printStackTrace();
