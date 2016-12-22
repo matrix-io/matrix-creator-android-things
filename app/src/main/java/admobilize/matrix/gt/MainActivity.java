@@ -54,7 +54,7 @@ public class MainActivity extends Activity {
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final boolean DEBUG = Config.DEBUG;
 
-    private final boolean SHOW_EVERLOOP_PROGRESS = true;
+    private boolean SHOW_EVERLOOP_PROGRESS = true;
     private static final int INTERVAL_POLLING_MS = 10;
 
     private Handler mHandler = new Handler();
@@ -191,6 +191,9 @@ public class MainActivity extends Activity {
         mHandler.removeCallbacks(mPollingRunnable);
         if(DEBUG)Log.i(TAG, "Closing devices and GPIO");
         try {
+            SHOW_EVERLOOP_PROGRESS=false;
+            everloop.clear();
+            everloop.write(everloop.ledImage);
             mLedGpio.close();
             spiDevice.close();
         } catch (IOException e) {
