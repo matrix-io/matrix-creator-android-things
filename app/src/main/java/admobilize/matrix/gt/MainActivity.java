@@ -1,17 +1,18 @@
 /*
- * Copyright 2016, The Android Open Source Project
+ * Copyright 2016 <Admobilize>
+ * MATRIX Labs  [http://creator.matrix.one]
+ * This file is part of MATRIX Creator Google Things (GT)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * MATRIX Creator GT is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package admobilize.matrix.gt;
@@ -26,13 +27,17 @@ import com.google.android.things.pio.PeripheralManagerService;
 import com.google.android.things.pio.SpiDevice;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
+import admobilize.matrix.gt.matrix.Everloop;
 import admobilize.matrix.gt.matrix.Humidity;
 import admobilize.matrix.gt.matrix.IMU;
 import admobilize.matrix.gt.matrix.Pressure;
 import admobilize.matrix.gt.matrix.UV;
 import admobilize.matrix.gt.matrix.Wishbone;
+
+import static admobilize.matrix.gt.matrix.Everloop.*;
 
 /**
  * Sample usage of the Matrix-Creator sensors and GPIO calls
@@ -49,35 +54,50 @@ public class MainActivity extends Activity {
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final boolean DEBUG = Config.DEBUG;
 
-    private static final int INTERVAL_POLLING_MS = 50;
+    private final boolean SHOW_EVERLOOP_PROGRESS = true;
+    private static final int INTERVAL_POLLING_MS = 10;
 
     private Handler mHandler = new Handler();
     private Gpio mLedGpio;
     private SpiDevice spiDevice;
     private Wishbone wb;
-    private UV uvSensor;
+    private Everloop everloop;
     private Pressure pressure;
     private Humidity humidity;
     private IMU imuSensor;
+    private UV uvSensor;
+    private boolean toggleColor;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if(DEBUG)Log.i(TAG, "Starting Matrix-Creator device config..");
+        Log.i(TAG, "Starting Matrix-Creator device config..");
         PeripheralManagerService service = new PeripheralManagerService();
         configSPI(service);
         configGPIO(service);
+        initDevices(spiDevice);
         // Runnable that continuously update sensors and LED (Matrix LED on GPIO21)
         mHandler.post(mPollingRunnable);
     }
 
+    private void initDevices(SpiDevice spiDevice) {
+        wb=new Wishbone(spiDevice);
+        uvSensor = new UV(wb);
+        pressure = new Pressure(wb);
+        humidity = new Humidity(wb);
+        imuSensor = new IMU(wb);
+        everloop = new Everloop(wb);
+        everloop.clear();
+        everloop.write(everloop.ledImage);
+    }
+
     private void configGPIO(PeripheralManagerService service){
         try {
+            Log.i(TAG, "Available GPIO: " + service.getGpioList());
             String pinName = BoardDefaults.getGPIOForLED();
             mLedGpio = service.openGpio(pinName);
             mLedGpio.setDirection(Gpio.DIRECTION_OUT_INITIALLY_LOW);
-            Log.i(TAG, "Start blinking LED GPIO pin");
         } catch (IOException e) {
             Log.e(TAG, "Error on PeripheralIO API", e);
         }
@@ -87,7 +107,7 @@ public class MainActivity extends Activity {
         try {
             List<String> deviceList = service.getSpiBusList();
             if (deviceList.isEmpty()) {
-                Log.i(TAG, "No SPI bus available on this device.");
+                Log.i(TAG, "No SPI bus available");
             } else {
                 Log.i(TAG, "List of available devices: " + deviceList);
             }
@@ -97,18 +117,34 @@ public class MainActivity extends Activity {
             spiDevice.setBitsPerWord(8);          // 8 BPW
             spiDevice.setBitJustification(false); // MSB first
 
-            wb=new Wishbone(spiDevice);
-            uvSensor = new UV(wb);
-            pressure = new Pressure(wb);
-            humidity = new Humidity(wb);
-            imuSensor = new IMU(wb);
-
         } catch (IOException e) {
+            Log.e(TAG, "Error on PeripheralIO API (SPI)", e);
             e.printStackTrace();
         }
     }
 
+    void setColor(ArrayList<LedValue>leds, int pos, int r, int g, int b, int w) {
+        leds.get(pos % 35).red   = (byte) r;
+        leds.get(pos % 35).green = (byte) g;
+        leds.get(pos % 35).blue  = (byte) b;
+        leds.get(pos % 35).white = (byte) w;
+    }
+
+    void drawProgress(ArrayList<LedValue>leds, int counter) {
+        if(counter % 35 ==0) toggleColor=!toggleColor;
+        int min = counter % 35;
+        int solid = 35;
+        for (int i = 0; i <= min; i++) {
+            if(toggleColor) setColor(leds, i, i/3, solid/5, 0, 0);
+            else setColor(leds, i, solid/5, i/3, 0, 0);
+            solid=35-i;
+        }
+    }
+
     private Runnable mPollingRunnable = new Runnable() {
+
+        private long counter=0;
+
         @Override
         public void run() {
             // Exit Runnable if devices is already closed
@@ -132,9 +168,13 @@ public class MainActivity extends Activity {
                 output=output+"YW: "+ imuSensor.getYaw()+"\t";
                 output=output+"PT: "+ imuSensor.getPitch()+"\t";
                 output=output+"RL: "+ imuSensor.getRoll()+"\t";
+                if(DEBUG)Log.d(TAG,output);
 
-                if(DEBUG)Log.i(TAG,output);
-
+                if(SHOW_EVERLOOP_PROGRESS) {
+                    drawProgress(everloop.ledImage, (int) counter);
+                    everloop.write(everloop.ledImage);
+                    counter++;
+                }
                 // Reschedule the same runnable in {#INTERVAL_POLLING_MS} milliseconds
                 mHandler.postDelayed(mPollingRunnable, INTERVAL_POLLING_MS);
 
