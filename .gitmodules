@@ -1,3 +1,6 @@
 [submodule "xc3sprog"]
 	path = xc3sprog
 	url = https://github.com/matrix-io/xc3sprog.git
+[submodule "android-cmake"]
+	path = android-cmake
+	url = https://github.com/sh1r0/android-cmake.git
