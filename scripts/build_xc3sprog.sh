@@ -15,8 +15,10 @@ WD=$(readlink -f "`dirname $0`/..")
 N_JOBS=${N_JOBS:-4}
 XC3PROG_ROOT=${WD}/xc3sprog
 BUILD_DIR=${XC3PROG_ROOT}/build
-
 ANDROID_LIB_ROOT=${WD}/android_lib
+APP_PLATFORM="android-9"
+
+ASFLAGS="-D__ANDROID__"
 
 rm -rf "${BUILD_DIR}"
 mkdir -p "${BUILD_DIR}"
