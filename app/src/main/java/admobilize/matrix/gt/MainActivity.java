@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import admobilize.matrix.gt.XC3Sprog.JNIPrimitives;
 import admobilize.matrix.gt.matrix.Everloop;
 import admobilize.matrix.gt.matrix.Humidity;
 import admobilize.matrix.gt.matrix.IMU;
@@ -50,7 +51,7 @@ import static admobilize.matrix.gt.matrix.Everloop.*;
  * Created by Antonio Vanegas @hpsaturn on 12/19/16.
  */
 
-public class MainActivity extends Activity {
+public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoadListener {
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final boolean DEBUG = Config.DEBUG;
 
@@ -67,6 +68,7 @@ public class MainActivity extends Activity {
     private IMU imuSensor;
     private UV uvSensor;
     private boolean toggleColor;
+    private JNIPrimitives jni;
 
 
     @Override
@@ -79,6 +81,9 @@ public class MainActivity extends Activity {
         initDevices(spiDevice);
         // Runnable that continuously update sensors and LED (Matrix LED on GPIO21)
         mHandler.post(mPollingRunnable);
+        jni=new JNIPrimitives(this);
+        jni.init(this);
+
     }
 
     private void initDevices(SpiDevice spiDevice) {
@@ -204,4 +209,15 @@ public class MainActivity extends Activity {
         }
     }
 
+    @Override
+    public void onSuccess(int msg) {
+        if(DEBUG)Log.i(TAG, "Load firmware!->"+msg);
+
+    }
+
+    @Override
+    public void onError(String err) {
+        if(DEBUG)Log.i(TAG, err);
+
+    }
 }
