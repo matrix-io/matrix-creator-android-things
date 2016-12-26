@@ -70,6 +70,11 @@ public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoad
     private boolean toggleColor;
     private JNIPrimitives jni;
 
+    private Gpio mXCProgTDI;
+    private Gpio mXCProgTMS;
+    private Gpio mXCProgTCK;
+    private Gpio mXCProgTDO;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,7 +85,7 @@ public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoad
         configGPIO(service);
         initDevices(spiDevice);
         // Runnable that continuously update sensors and LED (Matrix LED on GPIO21)
-        mHandler.post(mPollingRunnable);
+//        mHandler.post(mPollingRunnable);
         jni=new JNIPrimitives(this);
         jni.init(this);
 
@@ -103,6 +108,14 @@ public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoad
             String pinName = BoardDefaults.getGPIOForLED();
             mLedGpio = service.openGpio(pinName);
             mLedGpio.setDirection(Gpio.DIRECTION_OUT_INITIALLY_LOW);
+            mXCProgTDI = service.openGpio(BoardDefaults.getGPIO_TDI());
+            mXCProgTMS = service.openGpio(BoardDefaults.getGPIO_TMS());
+            mXCProgTCK = service.openGpio(BoardDefaults.getGPIO_TCK());
+            mXCProgTDO = service.openGpio(BoardDefaults.getGPIO_TDO());
+            mXCProgTDI.setDirection(Gpio.DIRECTION_OUT_INITIALLY_LOW);
+            mXCProgTMS.setDirection(Gpio.DIRECTION_OUT_INITIALLY_LOW);
+            mXCProgTCK.setDirection(Gpio.DIRECTION_OUT_INITIALLY_LOW);
+            mXCProgTDO.setDirection(Gpio.DIRECTION_IN);
         } catch (IOException e) {
             Log.e(TAG, "Error on PeripheralIO API", e);
         }
@@ -220,4 +233,42 @@ public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoad
         if(DEBUG)Log.i(TAG, err);
 
     }
+
+    public void writeTDI(boolean state) {
+        try {
+            mXCProgTDI.setValue(state);
+        } catch (IOException e) {
+            Log.e(TAG, "Error on PeripheralIO API", e);
+            e.printStackTrace();
+        }
+    }
+
+    public void writeTMS(boolean state) {
+        try {
+            mXCProgTMS.setValue(state);
+        } catch (IOException e) {
+            Log.e(TAG, "Error on PeripheralIO API", e);
+            e.printStackTrace();
+        }
+    }
+
+    public void writeTCK(boolean state) {
+        try {
+            mXCProgTCK.setValue(state);
+        } catch (IOException e) {
+            Log.e(TAG, "Error on PeripheralIO API", e);
+            e.printStackTrace();
+        }
+    }
+
+    public boolean readTDO() {
+        try {
+            return mXCProgTDO.getValue();
+        } catch (IOException e) {
+            Log.e(TAG, "Error on PeripheralIO API", e);
+            e.printStackTrace();
+        }
+        return false;
+    }
+
 }
