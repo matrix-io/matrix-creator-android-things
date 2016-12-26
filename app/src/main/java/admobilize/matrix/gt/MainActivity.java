@@ -88,6 +88,7 @@ public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoad
 //        mHandler.post(mPollingRunnable);
         jni=new JNIPrimitives(this);
         jni.init(this);
+        jni.burnFirmware();
 
     }
 
@@ -271,4 +272,22 @@ public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoad
         return false;
     }
 
+    public void gpioLED(boolean state) {
+        try {
+            mLedGpio.setValue(state);
+        } catch (IOException e) {
+            Log.e(TAG, "Error on PeripheralIO API", e);
+            e.printStackTrace();
+        }
+    }
+
+    public boolean readLED() {
+        try {
+            return mLedGpio.getValue();
+        } catch (IOException e) {
+            Log.e(TAG, "Error on PeripheralIO API", e);
+            e.printStackTrace();
+        }
+        return false;
+    }
 }

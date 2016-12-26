@@ -44,6 +44,14 @@ public class JNICallbacks {
         return ((MainActivity)ctx).readTDO();
     }
 
+    public void gpioLED(boolean state) {
+        ((MainActivity)ctx).gpioLED(state);
+    }
+
+    public boolean readLED() {
+        return ((MainActivity)ctx).readLED();
+    }
+
     public static String getBuildVersion() {
         return Build.VERSION.RELEASE;
     }
