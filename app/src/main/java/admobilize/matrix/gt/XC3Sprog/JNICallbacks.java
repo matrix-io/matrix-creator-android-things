@@ -44,8 +44,8 @@ public class JNICallbacks {
         return ((MainActivity)ctx).readTDO();
     }
 
-    public void gpioLED(boolean state) {
-        ((MainActivity)ctx).gpioLED(state);
+    public void writeLED(boolean state) {
+        ((MainActivity)ctx).writeLED(state);
     }
 
     public boolean readLED() {

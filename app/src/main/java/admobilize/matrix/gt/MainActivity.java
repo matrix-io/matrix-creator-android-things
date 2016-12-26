@@ -272,7 +272,7 @@ public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoad
         return false;
     }
 
-    public void gpioLED(boolean state) {
+    public void writeLED(boolean state) {
         try {
             mLedGpio.setValue(state);
         } catch (IOException e) {
