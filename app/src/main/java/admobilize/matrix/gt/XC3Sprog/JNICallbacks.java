@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Build;
 
 import admobilize.matrix.gt.Config;
+import admobilize.matrix.gt.MainActivity;
 
 /**
  * Created by Antonio Vanegas @hpsaturn on 12/23/16.
@@ -15,9 +16,11 @@ public class JNICallbacks {
     private static final boolean DEBUG = Config.DEBUG;
 
     private final JNIPrimitives.OnSystemLoadListener onSystemLoadListener;
+    private Context ctx = null;
 
 
     public JNICallbacks(Context ctx) {
+        this.ctx=ctx;
         this.onSystemLoadListener = (JNIPrimitives.OnSystemLoadListener) ctx;
     }
 
@@ -25,8 +28,23 @@ public class JNICallbacks {
         onSystemLoadListener.onSuccess(success);
     }
 
+    public void writeTDI(boolean state) {
+        ((MainActivity)ctx).writeTDI(state);
+    }
 
-    static public String getBuildVersion() {
+    public void writeTMS(boolean state) {
+        ((MainActivity)ctx).writeTMS(state);
+    }
+
+    public void writeTCK(boolean state) {
+        ((MainActivity)ctx).writeTCK(state);
+    }
+
+    public boolean readTDO() {
+        return ((MainActivity)ctx).readTDO();
+    }
+
+    public static String getBuildVersion() {
         return Build.VERSION.RELEASE;
     }
 
