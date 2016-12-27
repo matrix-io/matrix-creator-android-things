@@ -74,7 +74,7 @@ public class JNIPrimitives {
 
     private static native int loadFirmware(OnSystemLoadListener onSystemLoadListener, String path);
 
-    public static native void burnFirmware();
+    public static native int burnFirmware();
 
     public static native void stopLoader();
 
