@@ -59,7 +59,6 @@ public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoad
     private static final int INTERVAL_POLLING_MS = 10;
 
     private Handler mHandler = new Handler();
-    private Gpio mLedGpio;
     private SpiDevice spiDevice;
     private Wishbone wb;
     private Everloop everloop;
@@ -70,12 +69,6 @@ public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoad
     private boolean toggleColor;
     private JNIPrimitives jni;
 
-    private Gpio mXCProgTDI;
-    private Gpio mXCProgTMS;
-    private Gpio mXCProgTCK;
-    private Gpio mXCProgTDO;
-    private Gpio mXCProgSAM;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,16 +76,14 @@ public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoad
         Log.i(TAG, "Starting Matrix-Creator device config..");
         PeripheralManagerService service = new PeripheralManagerService();
         configSPI(service);
-        configGPIO(service);
+//        configGPIO(service);
         initDevices(spiDevice);
-
-        resetSAM();
-        jni=new JNIPrimitives(this);
-        jni.init(this);
+        jni=new JNIPrimitives(this,service,spiDevice);
+        jni.init();
         jni.burnFirmware();
-//        while(jni.burnFirmware()!=1);
+        while(jni.burnFirmware()!=1);
         // Runnable that continuously update sensors and LED (Matrix LED on GPIO21)
-//        mHandler.post(mPollingRunnable);
+        mHandler.post(mPollingRunnable);
     }
 
     private void initDevices(SpiDevice spiDevice) {
@@ -104,27 +95,6 @@ public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoad
         everloop = new Everloop(wb);
         everloop.clear();
         everloop.write(everloop.ledImage);
-    }
-
-    private void configGPIO(PeripheralManagerService service){
-        try {
-            Log.i(TAG, "Available GPIO: " + service.getGpioList());
-            String pinName = BoardDefaults.getGPIOForLED();
-            mLedGpio = service.openGpio(pinName);
-            mLedGpio.setDirection(Gpio.DIRECTION_OUT_INITIALLY_LOW);
-            mXCProgTDI = service.openGpio(BoardDefaults.getGPIO_TDI());
-            mXCProgTMS = service.openGpio(BoardDefaults.getGPIO_TMS());
-            mXCProgTCK = service.openGpio(BoardDefaults.getGPIO_TCK());
-            mXCProgTDO = service.openGpio(BoardDefaults.getGPIO_TDO());
-            mXCProgSAM = service.openGpio(BoardDefaults.getGPIO_SAM());
-            mXCProgTDI.setDirection(Gpio.DIRECTION_OUT_INITIALLY_LOW);
-            mXCProgTMS.setDirection(Gpio.DIRECTION_OUT_INITIALLY_LOW);
-            mXCProgTCK.setDirection(Gpio.DIRECTION_OUT_INITIALLY_LOW);
-            mXCProgSAM.setDirection(Gpio.DIRECTION_OUT_INITIALLY_LOW);
-            mXCProgTDO.setDirection(Gpio.DIRECTION_IN);
-        } catch (IOException e) {
-            Log.e(TAG, "Error on PeripheralIO API", e);
-        }
     }
 
     private void configSPI(PeripheralManagerService service){
@@ -171,40 +141,37 @@ public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoad
 
         @Override
         public void run() {
+
             // Exit Runnable if devices is already closed
-            if (mLedGpio == null || wb == null) return;
-            try {
-                mLedGpio.setValue(!mLedGpio.getValue());
-                String output;
-                // Read UVsensor
-                output="UV: "+ uvSensor.read()+"\t";
-                // Read Pressure device values
-                pressure.read();
-                output=output+"AL: "+ pressure.getAltitude()+"\t";
-                output=output+"PR: "+ pressure.getPressure()+"\t";
-                output=output+"TP: "+ pressure.getTemperature()+"\t";
-                // Read Humidity device values
-                humidity.read();
-                output=output+"HM: "+ humidity.getHumidity()+"\t";
-                output=output+"TP: "+ humidity.getTemperature()+"\t";
-                // Read IMU device values
-                imuSensor.read();
-                output=output+"YW: "+ imuSensor.getYaw()+"\t";
-                output=output+"PT: "+ imuSensor.getPitch()+"\t";
-                output=output+"RL: "+ imuSensor.getRoll()+"\t";
-                if(DEBUG)Log.d(TAG,output);
+            if (wb == null) return;
+            //                mLedGpio.setValue(!mLedGpio.getValue());
+            String output;
+            // Read UVsensor
+            output="UV: "+ uvSensor.read()+"\t";
+            // Read Pressure device values
+            pressure.read();
+            output=output+"AL: "+ pressure.getAltitude()+"\t";
+            output=output+"PR: "+ pressure.getPressure()+"\t";
+            output=output+"TP: "+ pressure.getTemperature()+"\t";
+            // Read Humidity device values
+            humidity.read();
+            output=output+"HM: "+ humidity.getHumidity()+"\t";
+            output=output+"TP: "+ humidity.getTemperature()+"\t";
+            // Read IMU device values
+            imuSensor.read();
+            output=output+"YW: "+ imuSensor.getYaw()+"\t";
+            output=output+"PT: "+ imuSensor.getPitch()+"\t";
+            output=output+"RL: "+ imuSensor.getRoll()+"\t";
+            if(DEBUG)Log.d(TAG,output);
 
-                if(SHOW_EVERLOOP_PROGRESS) {
-                    drawProgress(everloop.ledImage, (int) counter);
-                    everloop.write(everloop.ledImage);
-                    counter++;
-                }
-                // Reschedule the same runnable in {#INTERVAL_POLLING_MS} milliseconds
-                mHandler.postDelayed(mPollingRunnable, INTERVAL_POLLING_MS);
-
-            } catch (IOException e) {
-                Log.e(TAG, "Error on PeripheralIO API", e);
+            if(SHOW_EVERLOOP_PROGRESS) {
+                drawProgress(everloop.ledImage, (int) counter);
+                everloop.write(everloop.ledImage);
+                counter++;
             }
+            // Reschedule the same runnable in {#INTERVAL_POLLING_MS} milliseconds
+            mHandler.postDelayed(mPollingRunnable, INTERVAL_POLLING_MS);
+
         }
     };
 
@@ -218,12 +185,12 @@ public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoad
             SHOW_EVERLOOP_PROGRESS=false;
             everloop.clear();
             everloop.write(everloop.ledImage);
-            mLedGpio.close();
+//            mLedGpio.close();
             spiDevice.close();
         } catch (IOException e) {
             Log.e(TAG, "Error on PeripheralIO API", e);
         } finally {
-            mLedGpio = null;
+//            mLedGpio = null;
             spiDevice = null;
         }
     }
@@ -240,71 +207,4 @@ public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoad
 
     }
 
-    public void writeTDI(boolean state) {
-        try {
-            mXCProgTDI.setValue(state);
-        } catch (IOException e) {
-            Log.e(TAG, "Error on PeripheralIO API", e);
-            e.printStackTrace();
-        }
-    }
-
-    public void writeTMS(boolean state) {
-        try {
-            mXCProgTMS.setValue(state);
-        } catch (IOException e) {
-            Log.e(TAG, "Error on PeripheralIO API", e);
-            e.printStackTrace();
-        }
-    }
-
-    public void writeTCK(boolean state) {
-        try {
-            mXCProgTCK.setValue(state);
-        } catch (IOException e) {
-            Log.e(TAG, "Error on PeripheralIO API", e);
-            e.printStackTrace();
-        }
-    }
-
-    public boolean readTDO() {
-        try {
-            return mXCProgTDO.getValue();
-        } catch (IOException e) {
-            Log.e(TAG, "Error on PeripheralIO API", e);
-            e.printStackTrace();
-        }
-        return false;
-    }
-
-    public void writeLED(boolean state) {
-        try {
-            mLedGpio.setValue(state);
-        } catch (IOException e) {
-            Log.e(TAG, "Error on PeripheralIO API", e);
-            e.printStackTrace();
-        }
-    }
-
-    public boolean readLED() {
-        try {
-            return mLedGpio.getValue();
-        } catch (IOException e) {
-            Log.e(TAG, "Error on PeripheralIO API", e);
-            e.printStackTrace();
-        }
-        return false;
-    }
-
-    public void resetSAM(){
-        try {
-            mXCProgSAM.setValue(true);
-            mXCProgSAM.setValue(false);
-            mXCProgSAM.setValue(true);
-
-        } catch (IOException e) {
-            Log.e(TAG, "Error on PeripheralIO API", e);
-            e.printStackTrace();
-        }
-    }
 }
