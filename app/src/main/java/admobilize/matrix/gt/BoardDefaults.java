@@ -86,6 +86,16 @@ public class BoardDefaults {
         }
     }
 
+     public static String getGPIO_SAM() {
+        switch (getBoardVariant()) {
+            case DEVICE_RPI3:
+                return "BCM18";
+            default:
+                throw new IllegalStateException("Unknown Build.DEVICE " + Build.DEVICE);
+        }
+    }
+
+
     public static String getSpiBus() {
         switch (getBoardVariant()) {
             case DEVICE_EDISON_ARDUINO:
