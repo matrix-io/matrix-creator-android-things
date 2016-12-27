@@ -74,6 +74,7 @@ public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoad
     private Gpio mXCProgTMS;
     private Gpio mXCProgTCK;
     private Gpio mXCProgTDO;
+    private Gpio mXCProgSAM;
 
 
     @Override
@@ -84,11 +85,13 @@ public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoad
         configSPI(service);
         configGPIO(service);
         initDevices(spiDevice);
-        // Runnable that continuously update sensors and LED (Matrix LED on GPIO21)
-//        mHandler.post(mPollingRunnable);
+
+        resetSAM();
         jni=new JNIPrimitives(this);
         jni.init(this);
         jni.burnFirmware();
+        // Runnable that continuously update sensors and LED (Matrix LED on GPIO21)
+//        mHandler.post(mPollingRunnable);
 
     }
 
@@ -113,9 +116,11 @@ public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoad
             mXCProgTMS = service.openGpio(BoardDefaults.getGPIO_TMS());
             mXCProgTCK = service.openGpio(BoardDefaults.getGPIO_TCK());
             mXCProgTDO = service.openGpio(BoardDefaults.getGPIO_TDO());
+            mXCProgSAM = service.openGpio(BoardDefaults.getGPIO_SAM());
             mXCProgTDI.setDirection(Gpio.DIRECTION_OUT_INITIALLY_LOW);
             mXCProgTMS.setDirection(Gpio.DIRECTION_OUT_INITIALLY_LOW);
             mXCProgTCK.setDirection(Gpio.DIRECTION_OUT_INITIALLY_LOW);
+            mXCProgSAM.setDirection(Gpio.DIRECTION_OUT_INITIALLY_LOW);
             mXCProgTDO.setDirection(Gpio.DIRECTION_IN);
         } catch (IOException e) {
             Log.e(TAG, "Error on PeripheralIO API", e);
@@ -289,5 +294,17 @@ public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoad
             e.printStackTrace();
         }
         return false;
+    }
+
+    public void resetSAM(){
+        try {
+            mXCProgSAM.setValue(true);
+            mXCProgSAM.setValue(false);
+            mXCProgSAM.setValue(true);
+
+        } catch (IOException e) {
+            Log.e(TAG, "Error on PeripheralIO API", e);
+            e.printStackTrace();
+        }
     }
 }
