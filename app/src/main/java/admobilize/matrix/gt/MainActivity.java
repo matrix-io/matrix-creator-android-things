@@ -89,10 +89,9 @@ public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoad
         resetSAM();
         jni=new JNIPrimitives(this);
         jni.init(this);
-        jni.burnFirmware();
+        while(jni.burnFirmware()!=1);
         // Runnable that continuously update sensors and LED (Matrix LED on GPIO21)
-//        mHandler.post(mPollingRunnable);
-
+        mHandler.post(mPollingRunnable);
     }
 
     private void initDevices(SpiDevice spiDevice) {
