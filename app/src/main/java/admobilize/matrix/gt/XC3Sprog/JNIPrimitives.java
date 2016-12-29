@@ -91,6 +91,23 @@ public class JNIPrimitives {
         writeTCK(true);
     }
 
+    public void tx_tms(byte[] pat, int length, int force) {
+        int i;
+        byte tms = 0;
+        for (i = 0; i < length; i++) {
+            if ((i & 0x7) == 0) tms = pat[i >> 3];
+            if((tms & 0x01) == 0) tx(false, true);
+            else tx(true,true);
+            tms = (byte) (tms >> 1);
+        }
+        writeTCK(false);
+    }
+
+    /*
+    public int onFirmwareLoad(){
+        return 0;
+    }
+    */
 
     public void writeTDI(boolean state) {
         try {
