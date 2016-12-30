@@ -17,6 +17,7 @@ import admobilize.matrix.gt.BoardDefaults;
 import admobilize.matrix.gt.Config;
 import admobilize.matrix.gt.R;
 
+
 /**
  * Created by Antonio Vanegas @hpsaturn on 12/23/16.
  */
@@ -51,12 +52,13 @@ public class JNIPrimitives {
     }
 
     public void txrx_block(byte[]tdo, byte[]tdi, int length, boolean last){
+        if(DEBUG)Log.d(TAG,"TXRX_BLOCK:");
         int i = 0;
         int j = 0;
-        tdo=new byte[length];
         byte tdo_byte = 0;
         byte tdi_byte =0;
         int tdilenght = tdi.length;
+        if(DEBUG)Log.d(TAG,"txrx_block ==> tdi lenght: "+tdilenght);
         if (tdilenght>0) tdi_byte = tdi[j];
 
 //        LOGD ("lenght %d",length);
@@ -75,16 +77,20 @@ public class JNIPrimitives {
         tdo_byte = (byte) (tdo_byte + (txrx(last, (tdi_byte & 1) == 1) << (i % 8)));
         tdo[j] = tdo_byte;
 
+        if(DEBUG)Log.d(TAG,"TXRX_BLOCK ==> TDO="+bytesToHex(tdo));
+        if(DEBUG)Log.d(TAG,"TXRX_BLOCK ==> writeTCK(false)");
         writeTCK(false);
     }
 
     public byte txrx(boolean tms, boolean tdi){
+        if(DEBUG)Log.d(TAG,"TXRX:");
         tx(tms, tdi);
         if(readTDO())return 1;
         else return 0;
     }
 
     public void tx(boolean tms, boolean tdi) {
+        if(DEBUG)Log.d(TAG,"TX:");
         writeTCK(false);
         writeTDI(tdi);
         writeTMS(tms);
@@ -92,6 +98,7 @@ public class JNIPrimitives {
     }
 
     public void tx_tms(byte[] pat, int length, int force) {
+        if(DEBUG)Log.d(TAG,"TX_TMS:");
         int i;
         byte tms = 0;
         for (i = 0; i < length; i++) {
@@ -102,7 +109,16 @@ public class JNIPrimitives {
         }
         writeTCK(false);
     }
-
+    final protected static char[] hexArray = "0123456789ABCDEF".toCharArray();
+    public static String bytesToHex(byte[] bytes) {
+        char[] hexChars = new char[bytes.length * 2];
+        for ( int j = 0; j < bytes.length; j++ ) {
+            int v = bytes[j] & 0xFF;
+            hexChars[j * 2] = hexArray[v >>> 4];
+            hexChars[j * 2 + 1] = hexArray[v & 0x0F];
+        }
+        return new String(hexChars);
+    }
     /*
     public int onFirmwareLoad(){
         return 0;
