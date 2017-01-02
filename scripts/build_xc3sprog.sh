@@ -20,7 +20,7 @@ APP_PLATFORM="android-9"
 
 ASFLAGS="-D__ANDROID__"
 
-#rm -rf "${BUILD_DIR}"
+rm -rf "${BUILD_DIR}"
 mkdir -p "${BUILD_DIR}"
 cd "${BUILD_DIR}"
 
