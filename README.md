@@ -22,8 +22,8 @@ For now you can test Matrix Creator with Google Things, for this we need FPGA bu
 On your pc:
 
 1. Flashing rpi3 Google Things image and connect with it via adb. [more info](https://developer.android.com/things/hardware/raspberrypi.html#flashing_the_image)
-2. Obtain root privileges: `adb root` (take some seconds)
-3. Mount partions on write mode `adb remount`
+2. Obtain root privileges:        `adb root`    (take some seconds)
+3. Mount partions on write mode:  `adb remount`
 4. Clone repository and submodules: 
 
     ```bash
@@ -54,7 +54,7 @@ you get output like this:
 7. Testing FPGA status
 
    ```bash
-   adb shell matrix-sensors-statu
+   adb shell matrix-sensors-status
    ```
 you get output like this:
 
