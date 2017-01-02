@@ -25,10 +25,12 @@ On your pc:
 2. Obtain root privileges: `adb root` (take some seconds)
 3. Mount partions on write mode `adb remount`
 4. Clone repository and submodules: 
+
     ```bash
     git clone --recursive https://github.com/matrix-io/matrix-creator-android-things.git`
     ```
 5. Copy firmware, burner, flashing script, and sensors test:
+
     ```bash
     cd matrix-creator-android-things/firmware
     adb push matrix_system.bit /system/bin/
@@ -37,10 +39,12 @@ On your pc:
     adb matrix-sensors-status /system/bin/
    ```
 6. Programing FPGA (~1 minute for flashing):
+
     ```bash
     adb shell matrix-firmware-loader.sh
     ```
 you get output like this:
+
     ```bash
     disable Matrix Creator microcontroller..done
     reconfigurate FPGA and Micro..
