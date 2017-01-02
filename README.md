@@ -3,7 +3,7 @@ Matrix Creator-Android Things (ALPHA)
 
 This Android Things app runs basic tests for Matrix sensors and Everloop ring. 
 
-**IMPORTANT**: Please, note that these sample are not necessarily the easiest way because
+**IMPORTANT**: Please, note that these samples are not necessarily the easiest way because
 the Google Things source code and documentation has not been published or completed. The next documentation is a Alpha version.
 
 **PLEASE**: support us with one vote on "documentation request issue" in this link: [issue #2](https://github.com/androidthings/sample-simplepio/issues/2)
