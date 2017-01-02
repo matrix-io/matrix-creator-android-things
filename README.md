@@ -51,6 +51,20 @@ you get output like this:
     DNA is 0x79ec27f5572e2dfd
     done
     ```
+7. Testing FPGA status
+
+   ```bash
+   adb shell matrix-sensors-statu
+   ```
+you get output like this:
+
+   ```bash
+   IMUY:-1.1e+02°	IMUR:0.26°	   IMUP:1.2°
+   HUMI:35%	      HTMP:35°C	     UVID:0.0032
+   PRSS:74960	    PrAL:2470.7	   PrTP:32.562
+   MCU :0x10	    VER :0x161026
+   ```
+
 
 **NOTE** if you shutdown your raspberryPi, please repeat steps: 2 and 6. (root and reprograming FPGA)
 
