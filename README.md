@@ -65,3 +65,26 @@ From this point your have a basic Google Things project, for launch Demo (Matrix
    ```
 on your adb logcat will obtain sensors status and everloop leds will are animated.
 
+#### [OPTIONAL] Contribute or build xc3sprog programer code
+
+For build the lastest FPGA programmer you need NDK and run:
+    ```bash
+    ./scripts/build_xc3sprog.sh
+    ```
+you get output like this:
+    ```bash
+    ...
+    Linking CXX executable xc3sprog
+    [100%] Built target xc3sprog
+    [ 82%] Built target xc3sproglib
+    [100%] Built target xc3sprog
+    Installing the project stripped...
+    -- Install configuration: "Debug"
+    -- Installing: /home/username/src/admobilize/matrix-things/android_lib/xc3sprog/bin/xc3sprog
+    ```
+Then repeat steps 2 and 3 (firmware installation section) and copy new programer:
+    ```bash
+    cp android_lib/xc3sprog/bin/xc3sprog firmware/matrix-xc3sprog
+    adb push firmware/matrix-xc3sprog /system/bin/
+    ```
+
