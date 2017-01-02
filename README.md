@@ -24,26 +24,29 @@ On your pc:
 1. Flashing rpi3 Google Things image and connect with it via adb. [more info](https://developer.android.com/things/hardware/raspberrypi.html#flashing_the_image)
 2. Obtain root privileges: `adb root` (take some seconds)
 3. Mount partions on write mode `adb remount`
-4. Clone repository and submodules: `git clone --recursive https://github.com/matrix-io/matrix-creator-android-things.git`
+4. Clone repository and submodules: 
+    ```bash
+    git clone --recursive https://github.com/matrix-io/matrix-creator-android-things.git`
+    ```
 5. Copy firmware, burner, flashing script, and sensors test:
-```bash
+    ```bash
     cd matrix-creator-android-things/firmware
     adb push matrix_system.bit /system/bin/
     adb push matrix-xc3sprog /system/bin/
     adb push matrix-firmware-loader.sh /system/bin/
     adb matrix-sensors-status /system/bin/
-```
+   ```
 6. Programing FPGA (~1 minute for flashing):
-```bash
+    ```bash
     adb shell matrix-firmware-loader.sh
-```
+    ```
 you get output like this:
-```bash
+    ```bash
     disable Matrix Creator microcontroller..done
     reconfigurate FPGA and Micro..
     DNA is 0x79ec27f5572e2dfd
     done
-```
+    ```
 
 **NOTE** if you shutdown your raspberryPi, please repeat steps: 2 and 6. (root and reprograming FPGA)
 
@@ -52,9 +55,9 @@ Run sensors and everloop demo
 
 From this point your have a basic Google Things project, for launch Demo (MatrixCreatorGT app) please execute this from main directory:
 
-```bash
+   ```bash
     ./gradlew installDebug
     adb shell am start admobilize.matrix.gt/.MainActivity
-```
+   ```
 on your adb logcat will obtain sensors status and everloop leds will are animated.
 
