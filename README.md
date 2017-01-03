@@ -43,7 +43,7 @@ On your pc:
 4. Clone repository and submodules: 
 
     ```bash
-    git clone --recursive https://github.com/matrix-io/matrix-creator-android-things.git`
+    git clone --recursive https://github.com/matrix-io/matrix-creator-android-things.git
     ```
 5. Copy firmware, burner, flashing script, and sensors test:
 
@@ -52,7 +52,7 @@ On your pc:
     adb push matrix_system.bit /system/bin/
     adb push matrix-xc3sprog /system/bin/
     adb push matrix-firmware-loader.sh /system/bin/
-    adb matrix-sensors-status /system/bin/
+    adb push matrix-sensors-status /system/bin/
    ```
 6. Programing FPGA (~1 minute for flashing):
 
@@ -80,10 +80,11 @@ you get output like this:
    PRSS:74960     PrAL:2470.7    PrTP:32.562
    MCU :0x10      VER :0x161026
    ```
-if you get sensors on 0, please repeat step 6.
 
+##### Troubleshooting
 
-**NOTE** if you shutdown your raspberryPi, please repeat steps: 2 and 6. (root and reprograming FPGA)
+- if you get sensors on 0, please repeat step 6.
+- if you shutdown your raspberryPi, please repeat steps: 2 and 6. (root and reprograming FPGA)
 
 Run sensors and everloop demo application
 -----------------------------------------
