@@ -64,6 +64,7 @@ you get output like this:
    PRSS:74960     PrAL:2470.7    PrTP:32.562
    MCU :0x10      VER :0x161026
    ```
+if you get sensors on 0, please repeat step 6.
 
 
 **NOTE** if you shutdown your raspberryPi, please repeat steps: 2 and 6. (root and reprograming FPGA)
@@ -77,7 +78,7 @@ From this point your have a basic Google Things project, for launch Demo (Matrix
     ./gradlew installDebug
     adb shell am start admobilize.matrix.gt/.MainActivity
 ```
-on your adb logcat will obtain sensors status and everloop leds will are animated.
+on your adb logcat will obtain sensors status and everloop leds will be animated.
 
 ### (OPTIONAL) Contribute or build xc3sprog programer code
 
