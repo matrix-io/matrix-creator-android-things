@@ -52,7 +52,7 @@ On your pc:
     adb push matrix_system.bit /system/bin/
     adb push matrix-xc3sprog /system/bin/
     adb push matrix-firmware-loader.sh /system/bin/
-    adb matrix-sensors-status /system/bin/
+    adb push matrix-sensors-status /system/bin/
    ```
 6. Programing FPGA (~1 minute for flashing):
 
