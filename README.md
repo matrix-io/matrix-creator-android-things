@@ -12,7 +12,7 @@ Status
 ------
 
 - [X] Manual FPGA initialization
-- [ ] *Automatic FPGA initialization
+- [ ] Automatic FPGA initialization **
 - [X] All sensors
 - [X] Everloop control
 - [ ] Mic Array 
@@ -20,9 +20,9 @@ Status
 - [ ] Z-Wave driver
 - [ ] LIRC custom control config
 - [ ] Matrix vision framework
-- [ ] *Matrix Google Things contrib driver
+- [ ] Matrix Google Things contrib driver **
 
-* in progress
+  `**` in progress
 
 Pre-requisites
 --------------
