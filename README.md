@@ -8,6 +8,22 @@ the Google Things source code and documentation has not been published or comple
 
 **PLEASE**: support us with one vote on "documentation request issue" in this link: [issue #2](https://github.com/androidthings/sample-simplepio/issues/2)
 
+Status
+------
+
+- [X] Manual FPGA initialization
+- [-] Automatic FPGA initialization
+- [X] All sensors
+- [X] Everloop control
+- [-] Mic Array 
+- [ ] Zigbee driver
+- [ ] Z-Wave driver
+- [ ] LIRC custom control config
+- [ ] Matrix vision framework
+- [-] Matrix Google Things contrib driver
+
+`[-]` in progress
+
 Pre-requisites
 --------------
 
