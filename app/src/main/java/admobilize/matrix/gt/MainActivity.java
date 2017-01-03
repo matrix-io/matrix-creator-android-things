@@ -77,7 +77,9 @@ public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoad
         PeripheralManagerService service = new PeripheralManagerService();
         configSPI(service);
         initDevices(spiDevice);
-        // TODO: fix flashing time
+
+        // TODO: fix flashing time, and some NDK data convertions (in progress)
+        // TODO: branch: https://github.com/matrix-io/matrix-creator-android-things/tree/av/xc3sprog
         // startFPGAflashing();
 
         // Runnable that continuously update sensors and LED (Matrix LED on GPIO21)
