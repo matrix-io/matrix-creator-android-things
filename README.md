@@ -22,7 +22,7 @@ Status
 - [ ] Matrix vision framework
 - [ ] Matrix Google Things contrib driver **
 
-  `**` in progress
+`**` in progress
 
 Pre-requisites
 --------------
