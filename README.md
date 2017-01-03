@@ -80,10 +80,11 @@ you get output like this:
    PRSS:74960     PrAL:2470.7    PrTP:32.562
    MCU :0x10      VER :0x161026
    ```
-if you get sensors on 0, please repeat step 6.
 
+##### Troubleshooting
 
-**NOTE** if you shutdown your raspberryPi, please repeat steps: 2 and 6. (root and reprograming FPGA)
+- if you get sensors on 0, please repeat step 6.
+- if you shutdown your raspberryPi, please repeat steps: 2 and 6. (root and reprograming FPGA)
 
 Run sensors and everloop demo application
 -----------------------------------------
