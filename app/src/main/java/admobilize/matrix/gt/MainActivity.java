@@ -76,14 +76,18 @@ public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoad
         Log.i(TAG, "Starting Matrix-Creator device config..");
         PeripheralManagerService service = new PeripheralManagerService();
         configSPI(service);
-//        configGPIO(service);
         initDevices(spiDevice);
-        //jni=new JNIPrimitives(this,service,spiDevice);
-        //jni.init();
-        //jni.burnFirmware();
-        //while(jni.burnFirmware()!=1);
+        // TODO: fix flashing time
+        // startFPGAflashing();
+
         // Runnable that continuously update sensors and LED (Matrix LED on GPIO21)
         mHandler.post(mPollingRunnable);
+    }
+
+    private void startFPGAflashing(PeripheralManagerService service){
+        jni=new JNIPrimitives(this,service,spiDevice);
+        jni.init();
+        while(jni.burnFirmware()!=1);
     }
 
     private void initDevices(SpiDevice spiDevice) {
