@@ -1,7 +1,7 @@
 Matrix Creator-Android Things (ALPHA)
 =====================================
 
-This Android Things app runs basic tests for Matrix sensors and Everloop ring. 
+Android Things app for controlling Matrix Creator.
 
 **IMPORTANT**: Please, note that these samples are not necessarily the easiest way because
 the Google Things source code and documentation has not been published or completed. The next documentation is a Alpha version.
@@ -97,10 +97,10 @@ From this point your have a basic Google Things project, for launch Demo (Matrix
 ```
 on your adb logcat will obtain sensors status and everloop leds will be animated.
 
-(OPTIONAL) Contribute or build xc3sprog programer code
+(OPTIONAL) Contribute or build xc3sprog programer (cli executable)
 ------------------------------------------------------
 
-For build the lastest FPGA programmer you need NDK and run:
+For build last stable FPGA programmer you need NDK and run:
 
 ```bash
     ./scripts/build_xc3sprog.sh
@@ -123,4 +123,28 @@ Then repeat steps 2 and 3 (firmware installation section) and copy new programer
     cp android_lib/xc3sprog/bin/xc3sprog firmware/matrix-xc3sprog
     adb push firmware/matrix-xc3sprog /system/bin/
 ```
+
+(OPTIONAL) For build lastest xc3sprog (space user NDK version, **not funtional for now**)
+-----------------------------------------------------------------------------------------
+
+```bash
+    cd matrix-creator-android-things
+    git checkout av/xc3sprog
+    ./scripts/build_xc3sprog.sh
+```
+you get output like this:
+
+```bash
+    ...
+    Linking CXX shared library libxc3loader.so
+    [100%] Built target xc3loader
+    [ 83%] Built target xc3sproglib
+    [100%] Built target xc3loader
+    Installing the project stripped...
+    -- Install configuration: "Debug"
+    -- Installing: /home/username/src/admobilize/matrix-things/android_lib/xc3sprog/lib/libxc3loader.so
+    -- Installing on Android app libs: libxc3loader.so ==> app/src/main/libs/armeabi-v7a
+    -- Details: 356 -rw-r--r-- 1 362072 01-03 12:08 libxc3loader.so
+```
+
 
