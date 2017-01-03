@@ -43,7 +43,7 @@ On your pc:
 4. Clone repository and submodules: 
 
     ```bash
-    git clone --recursive https://github.com/matrix-io/matrix-creator-android-things.git`
+    git clone --recursive https://github.com/matrix-io/matrix-creator-android-things.git
     ```
 5. Copy firmware, burner, flashing script, and sensors test:
 
