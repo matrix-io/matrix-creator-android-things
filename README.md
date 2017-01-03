@@ -96,7 +96,8 @@ From this point your have a basic Google Things project, for launch Demo (Matrix
 ```
 on your adb logcat will obtain sensors status and everloop leds will be animated.
 
-### (OPTIONAL) Contribute or build xc3sprog programer code
+(OPTIONAL) Contribute or build xc3sprog programer code
+------------------------------------------------------
 
 For build the lastest FPGA programmer you need NDK and run:
 
