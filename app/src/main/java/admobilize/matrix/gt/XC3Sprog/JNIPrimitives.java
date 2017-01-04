@@ -13,6 +13,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 import admobilize.matrix.gt.BoardDefaults;
 import admobilize.matrix.gt.Config;
@@ -124,7 +125,6 @@ public class JNIPrimitives {
     }
 
     final protected static char[] hexArray = "0123456789ABCDEF".toCharArray();
-
     public static String bytesToHex(byte[] bytes) {
         char[] hexChars = new char[bytes.length * 2];
         for ( int j = 0; j < bytes.length; j++ ) {
@@ -135,12 +135,6 @@ public class JNIPrimitives {
         return new String(hexChars);
     }
 
-    public static String byteArrayToHex(byte[] a) {
-        StringBuilder sb = new StringBuilder(a.length * 2);
-        for(byte b: a)
-            sb.append(String.format("%02x", b & 0xff));
-        return sb.toString();
-    }
     /*
     public int onFirmwareLoad(){
         return 0;
@@ -232,7 +226,7 @@ public class JNIPrimitives {
             mXCProgTDO.setDirection(Gpio.DIRECTION_IN);
             resetSAM();
             loadBinaryFile();
-            buf = ByteBuffer.allocateDirect(1024*3000);
+            buf = ByteBuffer.allocateDirect(1024*3000).order(ByteOrder.nativeOrder());;
             loadFirmware(this,sytemPath,buf);
         } catch (IOException e) {
             Log.e(TAG, "Error on PeripheralIO API", e);
