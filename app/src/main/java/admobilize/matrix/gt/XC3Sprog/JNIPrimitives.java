@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 
 import admobilize.matrix.gt.BoardDefaults;
 import admobilize.matrix.gt.Config;
@@ -38,6 +39,7 @@ public class JNIPrimitives {
     private Gpio mXCProgTDO;
     private Gpio mXCProgSAM;
     private Gpio mLedGpio;
+    private ByteBuffer buf;
 
 
     public JNIPrimitives(Context ctx, PeripheralManagerService service, SpiDevice spiDevice) {
@@ -52,18 +54,23 @@ public class JNIPrimitives {
     }
 
     public void txrx_block(byte[]tdo, byte[]tdi, int length, boolean last){
-        if(DEBUG)Log.d(TAG,"TXRX_BLOCK:");
         int i = 0;
         int j = 0;
         byte tdo_byte = 0;
         byte tdi_byte =0;
+
+        if(length>10000){
+           buf.get(tdi,0,length);
+        }
+
         int tdilenght = tdi.length;
         int tdolenght = tdo.length;
+
 
 //        if(DEBUG&&tdilenght>0)Log.d(TAG,"TXRX_BLOCK IN ==>TDI="+byteArrayToHex(tdi));
 //        if(DEBUG&&tdolenght>0)Log.d(TAG,"TXRX_BLOCK IN ==>TDO="+byteArrayToHex(tdo));
 
-        if(DEBUG)Log.d(TAG,"txrx_block ==> tdi lenght: "+tdilenght);
+        if(DEBUG)Log.d(TAG,"==> tdi_lenght: "+tdilenght);
         if (tdilenght>0) tdi_byte = tdi[j];
 
 //        LOGD ("lenght %d",length);
@@ -225,7 +232,8 @@ public class JNIPrimitives {
             mXCProgTDO.setDirection(Gpio.DIRECTION_IN);
             resetSAM();
             loadBinaryFile();
-            loadFirmware(this,sytemPath);
+            buf = ByteBuffer.allocateDirect(1024*3000);
+            loadFirmware(this,sytemPath,buf);
         } catch (IOException e) {
             Log.e(TAG, "Error on PeripheralIO API", e);
             e.printStackTrace();
@@ -278,10 +286,10 @@ public class JNIPrimitives {
         System.loadLibrary("xc3loader");
     }
 
-    private static native int loadFirmware(JNIPrimitives object,String path);
+    private native static int loadFirmware(JNIPrimitives object, String path, ByteBuffer buf);
 
-    public static native int burnFirmware();
+    public native static int burnFirmware();
 
-    public static native void stopLoader();
+    public native static void stopLoader();
 
 }
