@@ -18,6 +18,7 @@
 package admobilize.matrix.gt;
 
 import android.app.Activity;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -83,13 +84,22 @@ public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoad
         startFPGAflashing(service);
 
         // Runnable that continuously update sensors and LED (Matrix LED on GPIO21)
-        mHandler.post(mPollingRunnable);
+        // mHandler.post(mPollingRunnable);
     }
 
     private void startFPGAflashing(PeripheralManagerService service){
         jni=new JNIPrimitives(this,service,spiDevice);
         jni.init();
-//        while(jni.burnFirmware()!=1);
+        new BurnFirmware().execute();
+    }
+
+    private class BurnFirmware extends AsyncTask<Void, Void, Void>{
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            jni.burnFirmware();
+            return null;
+        }
     }
 
     private void initDevices(SpiDevice spiDevice) {
