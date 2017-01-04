@@ -90,6 +90,7 @@ public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoad
     private void startFPGAflashing(PeripheralManagerService service){
         jni=new JNIPrimitives(this,service,spiDevice);
         jni.init();
+        //jni.burnFirmware();
         new BurnFirmware().execute();
     }
 

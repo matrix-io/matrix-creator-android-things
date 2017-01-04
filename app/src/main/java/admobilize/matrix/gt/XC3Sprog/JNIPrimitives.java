@@ -54,7 +54,7 @@ public class JNIPrimitives {
         void onError(String err);
     }
 
-    public void txrx_block(byte[]tdo, byte[]tdi, int length, boolean last){
+    public void txrx_block(byte[]tdo, byte[]tdi, int length, boolean finalBlock, boolean last){
         int i = 0;
         int j = 0;
         byte tdo_byte = 0;
@@ -87,9 +87,9 @@ public class JNIPrimitives {
                 if (tdilenght>0) tdi_byte = tdi[j];  // Get the next TDI byte
             }
         }
+        if(!finalBlock)return;
         tdo_byte = (byte) (tdo_byte + (txrx(last, (tdi_byte & 1) == 1) << (i % 8)));
         if(tdolenght>0)tdo[j] = tdo_byte;
-
 //        if(DEBUG)Log.d(TAG,"TXRX_BLOCK OUT ==> TDO="+byteArrayToHex(tdo));
 //        if(DEBUG)Log.d(TAG,"TXRX_BLOCK OUT ==> TDO Length: "+tdo.length);
 //        if(DEBUG)Log.d(TAG,"TXRX_BLOCK OUT ==> writeTCK(false)");
@@ -226,7 +226,7 @@ public class JNIPrimitives {
             mXCProgTDO.setDirection(Gpio.DIRECTION_IN);
             resetSAM();
             loadBinaryFile();
-            buf = ByteBuffer.allocateDirect(1024*3000).order(ByteOrder.nativeOrder());;
+            buf = ByteBuffer.allocateDirect(1000*3000).order(ByteOrder.nativeOrder());
             loadFirmware(this,sytemPath,buf);
         } catch (IOException e) {
             Log.e(TAG, "Error on PeripheralIO API", e);
