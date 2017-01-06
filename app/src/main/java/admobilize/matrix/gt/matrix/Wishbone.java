@@ -20,8 +20,7 @@ public class Wishbone {
     private static final boolean DEBUG = Config.DEBUG;
 
     private byte[] tx_buffer_ = new byte[4096];
-    private byte[] rx_buffer_ = new byte[16];
-
+    private byte[] rx_buffer_ = new byte[4096];
 
     private final Lock _mutex = new ReentrantLock(true);
     private SpiDevice spiDevice;
