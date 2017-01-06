@@ -64,12 +64,11 @@ public class MicArray extends SensorBase {
             channel6[i]=ByteBuffer.wrap(data,(i*8+6)*2,2).order(ByteOrder.LITTLE_ENDIAN).getShort();
             channel7[i]=ByteBuffer.wrap(data,(i*8+7)*2,2).order(ByteOrder.LITTLE_ENDIAN).getShort();
         }
-
         if(sample<max_sample){
            output=concat(output,channel0) ;
         }
         if(sample==max_sample){
-            write();
+//            write();  // TODO: not work! maybe GT not support EXTERNALSTORAGE permission
         }
         sample++;
     }
@@ -98,7 +97,6 @@ public class MicArray extends SensorBase {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
     }
 
     /* Checks if external storage is available for read and write */
