@@ -78,8 +78,6 @@ public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoad
     private boolean toggleColor;
     private JNIPrimitives jni;
     private MicArray micArray;
-    private Ringtone r;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -143,11 +141,8 @@ public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoad
     public void configMicDataInterrupt(PeripheralManagerService service){
         try {
             Gpio gpio = service.openGpio(BoardDefaults.getGPIO_MIC_DATA());
-            // Initialize the pin as an input
             gpio.setDirection(Gpio.DIRECTION_IN);
-            // Low voltage is considered active
             gpio.setActiveType(Gpio.ACTIVE_LOW);
-
             // Register for all state changes
             gpio.setEdgeTriggerType(Gpio.EDGE_BOTH);
             gpio.registerGpioCallback(onMicDataCallback);
@@ -162,13 +157,11 @@ public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoad
             micArray.read();
             return super.onGpioEdge(gpio);
         }
-
         @Override
         public void onGpioError(Gpio gpio, int error) {
             super.onGpioError(gpio, error);
             Log.w(TAG, "onMicDataCallback error event: "+gpio + "==>" + error);
         }
-
     };
 
     void setColor(ArrayList<LedValue>leds, int pos, int r, int g, int b, int w) {
@@ -242,12 +235,10 @@ public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoad
             SHOW_EVERLOOP_PROGRESS=false;
             everloop.clear();
             everloop.write(everloop.ledImage);
-//            mLedGpio.close();
             spiDevice.close();
         } catch (IOException e) {
             Log.e(TAG, "Error on PeripheralIO API", e);
         } finally {
-//            mLedGpio = null;
             spiDevice = null;
         }
     }
