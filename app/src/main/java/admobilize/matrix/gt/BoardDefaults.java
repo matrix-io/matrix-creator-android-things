@@ -95,6 +95,15 @@ public class BoardDefaults {
         }
     }
 
+     public static String getGPIO_MIC_DATA() {
+        switch (getBoardVariant()) {
+            case DEVICE_RPI3:
+                return "BCM6";
+            default:
+                throw new IllegalStateException("Unknown Build.DEVICE " + Build.DEVICE);
+        }
+    }
+
 
     public static String getSpiBus() {
         switch (getBoardVariant()) {
