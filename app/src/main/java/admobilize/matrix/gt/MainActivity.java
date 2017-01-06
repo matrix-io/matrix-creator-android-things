@@ -17,12 +17,18 @@
 
 package admobilize.matrix.gt;
 
+import android.Manifest;
 import android.app.Activity;
+import android.content.pm.PackageManager;
+import android.media.Ringtone;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 
 import com.google.android.things.pio.Gpio;
+import com.google.android.things.pio.GpioCallback;
 import com.google.android.things.pio.PeripheralManagerService;
 import com.google.android.things.pio.SpiDevice;
 
@@ -34,6 +40,7 @@ import admobilize.matrix.gt.XC3Sprog.JNIPrimitives;
 import admobilize.matrix.gt.matrix.Everloop;
 import admobilize.matrix.gt.matrix.Humidity;
 import admobilize.matrix.gt.matrix.IMU;
+import admobilize.matrix.gt.matrix.MicArray;
 import admobilize.matrix.gt.matrix.Pressure;
 import admobilize.matrix.gt.matrix.UV;
 import admobilize.matrix.gt.matrix.Wishbone;
@@ -51,12 +58,14 @@ import static admobilize.matrix.gt.matrix.Everloop.*;
  * Created by Antonio Vanegas @hpsaturn on 12/19/16.
  */
 
+
 public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoadListener {
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final boolean DEBUG = Config.DEBUG;
 
     private boolean SHOW_EVERLOOP_PROGRESS = true;
-    private static final int INTERVAL_POLLING_MS = 10;
+    private boolean SHOW_SENSORS_OUTPUT = false;
+    private static final int INTERVAL_POLLING_MS = 50;
 
     private Handler mHandler = new Handler();
     private SpiDevice spiDevice;
@@ -68,20 +77,27 @@ public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoad
     private UV uvSensor;
     private boolean toggleColor;
     private JNIPrimitives jni;
+    private MicArray micArray;
+    private Ringtone r;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.i(TAG, "Starting Matrix-Creator device config..");
+
         PeripheralManagerService service = new PeripheralManagerService();
         configSPI(service);
         initDevices(spiDevice);
-
-        // TODO: fix flashing time, and some NDK data convertions (in progress)
-        // TODO: branch: https://github.com/matrix-io/matrix-creator-android-things/tree/av/xc3sprog
-        // startFPGAflashing();
-
+        configMicDataInterrupt(service);
+/**
+ *      ** ATTENTIO N**
+ *      TODO: Automatic FPGA initialization not work because Google Things has bad performance, issue:
+ *      https://code.google.com/p/android/issues/detail?id=231484
+ *      testing branch: https://github.com/matrix-io/matrix-creator-android-things/tree/av/xc3sprog
+ *
+ *      startFPGAflashing();
+ */
         // Runnable that continuously update sensors and LED (Matrix LED on GPIO21)
         mHandler.post(mPollingRunnable);
     }
@@ -89,7 +105,7 @@ public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoad
     private void startFPGAflashing(PeripheralManagerService service){
         jni=new JNIPrimitives(this,service,spiDevice);
         jni.init();
-        while(jni.burnFirmware()!=1);
+        jni.burnFirmware();
     }
 
     private void initDevices(SpiDevice spiDevice) {
@@ -98,6 +114,7 @@ public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoad
         pressure = new Pressure(wb);
         humidity = new Humidity(wb);
         imuSensor = new IMU(wb);
+        micArray = new MicArray(wb);
         everloop = new Everloop(wb);
         everloop.clear();
         everloop.write(everloop.ledImage);
@@ -122,6 +139,37 @@ public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoad
             e.printStackTrace();
         }
     }
+
+    public void configMicDataInterrupt(PeripheralManagerService service){
+        try {
+            Gpio gpio = service.openGpio(BoardDefaults.getGPIO_MIC_DATA());
+            // Initialize the pin as an input
+            gpio.setDirection(Gpio.DIRECTION_IN);
+            // Low voltage is considered active
+            gpio.setActiveType(Gpio.ACTIVE_LOW);
+
+            // Register for all state changes
+            gpio.setEdgeTriggerType(Gpio.EDGE_BOTH);
+            gpio.registerGpioCallback(onMicDataCallback);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private GpioCallback onMicDataCallback = new GpioCallback() {
+        @Override
+        public boolean onGpioEdge(Gpio gpio) {
+            micArray.read();
+            return super.onGpioEdge(gpio);
+        }
+
+        @Override
+        public void onGpioError(Gpio gpio, int error) {
+            super.onGpioError(gpio, error);
+            Log.w(TAG, "onMicDataCallback error event: "+gpio + "==>" + error);
+        }
+
+    };
 
     void setColor(ArrayList<LedValue>leds, int pos, int r, int g, int b, int w) {
         leds.get(pos % 35).red   = (byte) r;
@@ -150,25 +198,28 @@ public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoad
 
             // Exit Runnable if devices is already closed
             if (wb == null) return;
-            //                mLedGpio.setValue(!mLedGpio.getValue());
-            String output;
-            // Read UVsensor
-            output="UV: "+ uvSensor.read()+"\t";
-            // Read Pressure device values
-            pressure.read();
-            output=output+"AL: "+ pressure.getAltitude()+"\t";
-            output=output+"PR: "+ pressure.getPressure()+"\t";
-            output=output+"TP: "+ pressure.getTemperature()+"\t";
-            // Read Humidity device values
-            humidity.read();
-            output=output+"HM: "+ humidity.getHumidity()+"\t";
-            output=output+"TP: "+ humidity.getTemperature()+"\t";
-            // Read IMU device values
-            imuSensor.read();
-            output=output+"YW: "+ imuSensor.getYaw()+"\t";
-            output=output+"PT: "+ imuSensor.getPitch()+"\t";
-            output=output+"RL: "+ imuSensor.getRoll()+"\t";
-            if(DEBUG)Log.d(TAG,output);
+            // mLedGpio.setValue(!mLedGpio.getValue());
+
+            if(SHOW_SENSORS_OUTPUT) {
+                String output;
+                // Read UVsensor
+                output = "UV: " + uvSensor.read() + "\t";
+                // Read Pressure device values
+                pressure.read();
+                output = output + "AL: " + pressure.getAltitude() + "\t";
+                output = output + "PR: " + pressure.getPressure() + "\t";
+                output = output + "TP: " + pressure.getTemperature() + "\t";
+                // Read Humidity device values
+                humidity.read();
+                output = output + "HM: " + humidity.getHumidity() + "\t";
+                output = output + "TP: " + humidity.getTemperature() + "\t";
+                // Read IMU device values
+                imuSensor.read();
+                output = output + "YW: " + imuSensor.getYaw() + "\t";
+                output = output + "PT: " + imuSensor.getPitch() + "\t";
+                output = output + "RL: " + imuSensor.getRoll() + "\t";
+                if (DEBUG) Log.d(TAG, output);
+            }
 
             if(SHOW_EVERLOOP_PROGRESS) {
                 drawProgress(everloop.ledImage, (int) counter);
