@@ -89,7 +89,7 @@ public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoad
         initDevices(spiDevice);
         configMicDataInterrupt(service);
 /**
- *      ** ATTENTIO N**
+ *      ** ATTENTION**
  *      TODO: Automatic FPGA initialization not work because Google Things has bad performance, issue:
  *      https://code.google.com/p/android/issues/detail?id=231484
  *      testing branch: https://github.com/matrix-io/matrix-creator-android-things/tree/av/xc3sprog

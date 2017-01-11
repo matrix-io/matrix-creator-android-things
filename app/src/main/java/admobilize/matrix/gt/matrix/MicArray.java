@@ -1,19 +1,14 @@
 package admobilize.matrix.gt.matrix;
 
-import android.content.Context;
-import android.os.Environment;
+import android.os.AsyncTask;
 import android.util.Log;
-
-import java.io.BufferedWriter;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.ShortBuffer;
 import java.util.Arrays;
 
 import admobilize.matrix.gt.Config;
@@ -27,16 +22,10 @@ public class MicArray extends SensorBase {
     private static final String TAG = MicArray.class.getSimpleName();
     private static final boolean DEBUG = Config.DEBUG;
 
-    public static final int kMicarrayBufferSize = 1024;
-    public static final int kMicrophoneArrayIRQ = 6;
-    public static final int kMicrophoneChannels = 8;
-    public static final int kSamplingRate = 16000;
-
     int max_sample = 100;
     int sample=0;
 
     short[]output = new short[0];
-
     short[]channel0 = new short[128];
     short[]channel1 = new short[128];
     short[]channel2 = new short[128];
@@ -45,7 +34,6 @@ public class MicArray extends SensorBase {
     short[]channel5 = new short[128];
     short[]channel6 = new short[128];
     short[]channel7 = new short[128];
-
 
     public MicArray(Wishbone wb) {
         super(wb);
@@ -68,9 +56,58 @@ public class MicArray extends SensorBase {
            output=concat(output,channel0) ;
         }
         if(sample==max_sample){
-//            write();  // TODO: not work! maybe GT not support EXTERNALSTORAGE permission
+            new sendData().execute(); // only for debugging, receive data with netcat
+            // TODO: write() SD write not work! maybe GT not support EXTERNALSTORAGE permission
+//          write();
         }
         sample++;
+    }
+
+    private class sendData extends AsyncTask<Void,Void,Void>{
+        @Override
+        protected Void doInBackground(Void... voids) {
+            writeViaSocket();
+            return null;
+        }
+    }
+
+    private void writeViaSocket(){
+        if(DEBUG)Log.d(TAG,"write via socket..");
+        if(DEBUG)Log.d(TAG,Arrays.toString(output));
+        Socket socket = null;
+        DataOutputStream dataOutputStream = null;
+        DataInputStream dataInputStream = null;
+
+        try {
+            socket = new Socket(Config.EXTERNAL_DEBUG_IP, Config.EXTERNAL_DEBUG_PORT);
+            dataOutputStream = new DataOutputStream(socket.getOutputStream());
+            dataInputStream = new DataInputStream(socket.getInputStream());
+            int length = output.length;
+            for(int i=0;i<length;i++){
+                dataOutputStream.writeShort(output[i]);
+            }
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        finally{
+            if (socket != null){
+                try { socket.close(); } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (dataOutputStream != null){
+                try { dataOutputStream.close(); } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (dataInputStream != null){
+                try { dataInputStream.close(); } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
     public short[] concat(short[] a, short[] b) {
@@ -80,42 +117,6 @@ public class MicArray extends SensorBase {
         System.arraycopy(a, 0, c, 0, aLen);
         System.arraycopy(b, 0, c, aLen, bLen);
         return c;
-    }
-
-    public void write () {
-        try {
-            if(DEBUG)Log.d(TAG,"isExternalStorageWritable: "+isExternalStorageWritable());
-            if(DEBUG)Log.d(TAG,"isExternalStorageReadable: "+isExternalStorageReadable());
-            if(DEBUG)Log.d(TAG,"write file..");
-            File myFile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).getPath()+"/sound.txt");
-            myFile.createNewFile();
-            FileOutputStream fOut = new FileOutputStream(myFile);
-            OutputStreamWriter myOutWriter = new OutputStreamWriter(fOut);
-            myOutWriter.write(Arrays.toString(output));
-            myOutWriter.close();
-            fOut.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    /* Checks if external storage is available for read and write */
-    public boolean isExternalStorageWritable() {
-        String state = Environment.getExternalStorageState();
-        if (Environment.MEDIA_MOUNTED.equals(state)) {
-            return true;
-        }
-        return false;
-    }
-
-    /* Checks if external storage is available to at least read */
-    public boolean isExternalStorageReadable() {
-        String state = Environment.getExternalStorageState();
-        if (Environment.MEDIA_MOUNTED.equals(state) ||
-                Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
-            return true;
-        }
-        return false;
     }
 
 }
