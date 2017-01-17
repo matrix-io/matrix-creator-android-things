@@ -1,12 +1,9 @@
 Matrix Creator-Android Things (ALPHA)
 =====================================
 
-This Android Things app runs basic tests for Matrix sensors and Everloop ring. 
+This Android Things app runs basic tests for Matrix sensors and Everloop ring.
 
-**IMPORTANT**: Please, note that these samples are not necessarily the easiest way because
-the Google Things source code and documentation has not been published or completed. The next documentation is a Alpha version.
-
-**PLEASE**: support us with one vote on "documentation request issue" in this link: [issue #2](https://github.com/androidthings/sample-simplepio/issues/2)
+**IMPORTANT**: Please, note that these samples are not necessarily the easiest way because the Android Things source code and documentation have not been published or completed and have some platform [issues](https://github.com/androidthings/sample-simplepio/issues/2)
 
 Status
 ------
@@ -15,12 +12,12 @@ Status
 - [ ] Automatic FPGA initialization **
 - [X] All sensors
 - [X] Everloop control
-- [ ] Mic Array 
+- [ ] Mic Array ** (see av/micarray branches) 
 - [ ] Zigbee driver
 - [ ] Z-Wave driver
 - [ ] LIRC custom control config
 - [ ] Matrix vision framework
-- [ ] Matrix Google Things contrib driver **
+- [ ] Matrix Android Things contrib driver **
 
 `**` in progress
 
@@ -33,11 +30,11 @@ Pre-requisites
 
 #### Firmware installation
 
-For now you can test Matrix Creator with Google Things, for this we need FPGA burner running from root privileges, for it please follow next steps:
+For now you can test Matrix Creator with Android Things, for this we need FPGA burner running from root privileges, for it please follow next steps:
 
 On your pc:
 
-1. Flashing rpi3 Google Things image and connect with it via adb. [more info](https://developer.android.com/things/hardware/raspberrypi.html#flashing_the_image)
+1. Flashing rpi3 Android Things image and connect with it via adb. [more info](https://developer.android.com/things/hardware/raspberrypi.html#flashing_the_image)
 2. Obtain root privileges:        `adb root`    (take some seconds)
 3. Mount partions on write mode:  `adb remount`
 4. Clone repository and submodules: 
@@ -89,7 +86,7 @@ you get output like this:
 Run sensors and everloop demo application
 -----------------------------------------
 
-From this point your have a basic Google Things project, for launch Demo (MatrixCreatorGT app) please execute this from main directory:
+From this point your have a basic Android Things project, for launch Demo (MatrixCreatorGT app) please execute this from main directory:
 
 ```bash
     ./gradlew installDebug
