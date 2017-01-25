@@ -34,33 +34,43 @@ public class MicArray extends SensorBase {
     short[]channel5 = new short[128];
     short[]channel6 = new short[128];
     short[]channel7 = new short[128];
+    byte[] data = new byte[128*8*2];
 
     public MicArray(Wishbone wb) {
         super(wb);
     }
 
     public void read (){
-        byte[] data = new byte[128*8*2];
-        wb.SpiReadBurst((short) kMicrophoneArrayBaseAddress,data,128*8*2);
-        for (int i=0;i<128;i++){
-            channel0[i]=ByteBuffer.wrap(data,(i*8+0)*2,2).order(ByteOrder.LITTLE_ENDIAN).getShort();
-            channel1[i]=ByteBuffer.wrap(data,(i*8+1)*2,2).order(ByteOrder.LITTLE_ENDIAN).getShort();
-            channel2[i]=ByteBuffer.wrap(data,(i*8+2)*2,2).order(ByteOrder.LITTLE_ENDIAN).getShort();
-            channel3[i]=ByteBuffer.wrap(data,(i*8+3)*2,2).order(ByteOrder.LITTLE_ENDIAN).getShort();
-            channel4[i]=ByteBuffer.wrap(data,(i*8+4)*2,2).order(ByteOrder.LITTLE_ENDIAN).getShort();
-            channel5[i]=ByteBuffer.wrap(data,(i*8+5)*2,2).order(ByteOrder.LITTLE_ENDIAN).getShort();
-            channel6[i]=ByteBuffer.wrap(data,(i*8+6)*2,2).order(ByteOrder.LITTLE_ENDIAN).getShort();
-            channel7[i]=ByteBuffer.wrap(data,(i*8+7)*2,2).order(ByteOrder.LITTLE_ENDIAN).getShort();
+        new readData().execute();
+    }
+
+    private class readData extends AsyncTask<Void,Void,Void>{
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            wb.SpiReadBurst((short) kMicrophoneArrayBaseAddress,data,128*8*2);
+            for (int i=0;i<128;i++){
+//                channel0[i]= (short) sample;
+                channel0[i]=ByteBuffer.wrap(data,(i*8+0)*2,2).order(ByteOrder.LITTLE_ENDIAN).getShort();
+                channel1[i]=ByteBuffer.wrap(data,(i*8+1)*2,2).order(ByteOrder.LITTLE_ENDIAN).getShort();
+                channel2[i]=ByteBuffer.wrap(data,(i*8+2)*2,2).order(ByteOrder.LITTLE_ENDIAN).getShort();
+                channel3[i]=ByteBuffer.wrap(data,(i*8+3)*2,2).order(ByteOrder.LITTLE_ENDIAN).getShort();
+                channel4[i]=ByteBuffer.wrap(data,(i*8+4)*2,2).order(ByteOrder.LITTLE_ENDIAN).getShort();
+                channel5[i]=ByteBuffer.wrap(data,(i*8+5)*2,2).order(ByteOrder.LITTLE_ENDIAN).getShort();
+                channel6[i]=ByteBuffer.wrap(data,(i*8+6)*2,2).order(ByteOrder.LITTLE_ENDIAN).getShort();
+                channel7[i]=ByteBuffer.wrap(data,(i*8+7)*2,2).order(ByteOrder.LITTLE_ENDIAN).getShort();
+                sample++;
+            }
+            output=concat(output,channel0) ;
+//            Log.d(TAG,"onReadData: output size:"+output.length);
+            return null;
         }
-        if(sample<max_sample){
-           output=concat(output,channel0) ;
-        }
-        if(sample==max_sample){
-            new sendData().execute(); // only for debugging, receive data with netcat
-            // TODO: write() SD write not work! maybe GT not support EXTERNALSTORAGE permission
-//          write();
-        }
-        sample++;
+    }
+
+    public void sendDataToDebugIp(){
+        // TODO: write to SD not work! maybe GT not support EXTERNALSTORAGE permission
+        if(DEBUG)Log.d(TAG,)
+        new sendData().execute(); // only for debugging, receive data with netcat
     }
 
     private class sendData extends AsyncTask<Void,Void,Void>{
@@ -73,6 +83,7 @@ public class MicArray extends SensorBase {
 
     private void writeViaSocket(){
         if(DEBUG)Log.d(TAG,"write via socket..");
+        if(DEBUG)Log.d(TAG,"output size:"+output.length);
         if(DEBUG)Log.d(TAG,Arrays.toString(output));
         Socket socket = null;
         DataOutputStream dataOutputStream = null;
