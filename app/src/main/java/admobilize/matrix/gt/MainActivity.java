@@ -63,7 +63,7 @@ public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoad
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final boolean DEBUG = Config.DEBUG;
 
-    private boolean SHOW_EVERLOOP_PROGRESS = true;
+    private boolean SHOW_EVERLOOP_PROGRESS = false;
     private boolean SHOW_SENSORS_OUTPUT = false;
     private static final int INTERVAL_POLLING_MS = 50;
 
@@ -97,7 +97,7 @@ public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoad
  *      startFPGAflashing();
  */
         // Runnable that continuously update sensors and LED (Matrix LED on GPIO21)
-        mHandler.post(mPollingRunnable);
+//        mHandler.post(mPollingRunnable);
     }
 
     private void startFPGAflashing(PeripheralManagerService service){
@@ -151,10 +151,21 @@ public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoad
         }
     }
 
+    int max_irq_samples=2000;
+    int irq_samples=0;
+    boolean sendData=false;
     private GpioCallback onMicDataCallback = new GpioCallback() {
         @Override
         public boolean onGpioEdge(Gpio gpio) {
-            micArray.read();
+            if(irq_samples<max_irq_samples){
+                irq_samples++;
+                micArray.read();
+            }
+            else if (!sendData){
+                Log.i(TAG,"onMicDataCallback "+max_irq_samples+" samples reached!");
+                micArray.sendDataToDebugIp();
+                sendData=true;
+            }
             return super.onGpioEdge(gpio);
         }
         @Override
