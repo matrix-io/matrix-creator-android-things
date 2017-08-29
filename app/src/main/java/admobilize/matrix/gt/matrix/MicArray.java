@@ -69,7 +69,6 @@ public class MicArray extends SensorBase {
 
     public void sendDataToDebugIp(){
         // TODO: write to SD not work! maybe GT not support EXTERNALSTORAGE permission
-        if(DEBUG)Log.d(TAG,)
         new sendData().execute(); // only for debugging, receive data with netcat
     }
 
