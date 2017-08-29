@@ -63,9 +63,9 @@ public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoad
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final boolean DEBUG = Config.DEBUG;
 
-    private boolean SHOW_EVERLOOP_PROGRESS = false;
+    private boolean SHOW_EVERLOOP_PROGRESS = true;
     private boolean SHOW_SENSORS_OUTPUT = false;
-    private static final int INTERVAL_POLLING_MS = 50;
+    private static final int INTERVAL_POLLING_MS = 10;
 
     private Handler mHandler = new Handler();
     private SpiDevice spiDevice;
@@ -97,7 +97,7 @@ public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoad
  *      startFPGAflashing();
  */
         // Runnable that continuously update sensors and LED (Matrix LED on GPIO21)
-//        mHandler.post(mPollingRunnable);
+        mHandler.post(mPollingRunnable);
     }
 
     private void startFPGAflashing(PeripheralManagerService service){
@@ -108,10 +108,10 @@ public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoad
 
     private void initDevices(SpiDevice spiDevice) {
         wb=new Wishbone(spiDevice);
-        uvSensor = new UV(wb);
-        pressure = new Pressure(wb);
-        humidity = new Humidity(wb);
-        imuSensor = new IMU(wb);
+//        uvSensor = new UV(wb);
+//        pressure = new Pressure(wb);
+//        humidity = new Humidity(wb);
+//        imuSensor = new IMU(wb);
         micArray = new MicArray(wb);
         everloop = new Everloop(wb);
         everloop.clear();
@@ -163,8 +163,9 @@ public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoad
             }
             else if (!sendData){
                 Log.i(TAG,"onMicDataCallback "+max_irq_samples+" samples reached!");
-                micArray.sendDataToDebugIp();
-                sendData=true;
+                irq_samples=0;
+//                micArray.sendDataToDebugIp();
+                sendData=false;
             }
             return super.onGpioEdge(gpio);
         }
@@ -176,20 +177,20 @@ public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoad
     };
 
     void setColor(ArrayList<LedValue>leds, int pos, int r, int g, int b, int w) {
-        leds.get(pos % 35).red   = (byte) r;
-        leds.get(pos % 35).green = (byte) g;
-        leds.get(pos % 35).blue  = (byte) b;
-        leds.get(pos % 35).white = (byte) w;
+        leds.get(pos % 18).red   = (byte) r;
+        leds.get(pos % 18).green = (byte) g;
+        leds.get(pos % 18).blue  = (byte) b;
+        leds.get(pos % 18).white = (byte) w;
     }
 
     void drawProgress(ArrayList<LedValue>leds, int counter) {
-        if(counter % 35 ==0) toggleColor=!toggleColor;
-        int min = counter % 35;
-        int solid = 35;
+        if(counter % 18 ==0) toggleColor=!toggleColor;
+        int min = counter % 18;
+        int solid = 18;
         for (int i = 0; i <= min; i++) {
             if(toggleColor) setColor(leds, i, i/3, solid/5, 0, 0);
             else setColor(leds, i, solid/5, i/3, 0, 0);
-            solid=35-i;
+            solid=18-i;
         }
     }
 

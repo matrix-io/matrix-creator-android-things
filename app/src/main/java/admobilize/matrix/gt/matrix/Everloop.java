@@ -50,7 +50,7 @@ public class Everloop extends SensorBase {
     }
 
     public void init(){
-        for(int i=0;i<35;i++){
+        for(int i=0;i<18;i++){
             ledImage.add(new LedValue());
         }
     }
