@@ -9,7 +9,9 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.ArrayDeque;
 import java.util.Arrays;
+import java.util.Iterator;
 
 import admobilize.matrix.gt.Config;
 
@@ -22,16 +24,15 @@ public class MicArray extends SensorBase {
     private static final String TAG = MicArray.class.getSimpleName();
     private static final boolean DEBUG = Config.DEBUG;
 
-    short[]output = new short[0];
-    short[]channel0 = new short[128];
-    short[]channel1 = new short[128];
-    short[]channel2 = new short[128];
-    short[]channel3 = new short[128];
-    short[]channel4 = new short[128];
-    short[]channel5 = new short[128];
-    short[]channel6 = new short[128];
-    short[]channel7 = new short[128];
     byte[] data = new byte[128*8*2];
+    ArrayDeque<Short> mic0 = new ArrayDeque<>();
+    ArrayDeque<Short> mic1 = new ArrayDeque<>();
+    ArrayDeque<Short> mic2 = new ArrayDeque<>();
+    ArrayDeque<Short> mic3 = new ArrayDeque<>();
+    ArrayDeque<Short> mic4 = new ArrayDeque<>();
+    ArrayDeque<Short> mic5 = new ArrayDeque<>();
+    ArrayDeque<Short> mic6 = new ArrayDeque<>();
+    ArrayDeque<Short> mic7 = new ArrayDeque<>();
 
     private boolean inRead;
 
@@ -59,21 +60,18 @@ public class MicArray extends SensorBase {
 
     private void appendData(){
         for (int i=0;i<128;i++){
-            channel0[i]=ByteBuffer.wrap(data,(i*8+0)*2,2).order(ByteOrder.BIG_ENDIAN).getShort();
-//            channel1[i]=ByteBuffer.wrap(data,(i*8+1)*2,2).order(ByteOrder.LITTLE_ENDIAN).getShort();
-//            channel2[i]=ByteBuffer.wrap(data,(i*8+2)*2,2).order(ByteOrder.LITTLE_ENDIAN).getShort();
-//            channel3[i]=ByteBuffer.wrap(data,(i*8+3)*2,2).order(ByteOrder.LITTLE_ENDIAN).getShort();
-//            channel4[i]=ByteBuffer.wrap(data,(i*8+4)*2,2).order(ByteOrder.LITTLE_ENDIAN).getShort();
-//            channel5[i]=ByteBuffer.wrap(data,(i*8+5)*2,2).order(ByteOrder.LITTLE_ENDIAN).getShort();
-//            channel6[i]=ByteBuffer.wrap(data,(i*8+6)*2,2).order(ByteOrder.LITTLE_ENDIAN).getShort();
-//            channel7[i]=ByteBuffer.wrap(data,(i*8+7)*2,2).order(ByteOrder.LITTLE_ENDIAN).getShort();
+            mic0.add(ByteBuffer.wrap(data,(i*8+0)*2,2).order(ByteOrder.BIG_ENDIAN).getShort());
+            mic1.add(ByteBuffer.wrap(data,(i*8+1)*2,2).order(ByteOrder.LITTLE_ENDIAN).getShort());
+            mic2.add(ByteBuffer.wrap(data,(i*8+2)*2,2).order(ByteOrder.LITTLE_ENDIAN).getShort());
+            mic3.add(ByteBuffer.wrap(data,(i*8+3)*2,2).order(ByteOrder.LITTLE_ENDIAN).getShort());
+            mic4.add(ByteBuffer.wrap(data,(i*8+4)*2,2).order(ByteOrder.LITTLE_ENDIAN).getShort());
+            mic5.add(ByteBuffer.wrap(data,(i*8+5)*2,2).order(ByteOrder.LITTLE_ENDIAN).getShort());
+            mic6.add(ByteBuffer.wrap(data,(i*8+6)*2,2).order(ByteOrder.LITTLE_ENDIAN).getShort());
+            mic7.add(ByteBuffer.wrap(data,(i*8+7)*2,2).order(ByteOrder.LITTLE_ENDIAN).getShort());
         }
-        output=concat(output,channel0) ;
     }
 
     public void clearData(){
-        Log.d(TAG,"[MIC] output size:"+output.length);
-        output = new short[0];
     }
 
     public void sendDataToDebugIp(){
@@ -91,8 +89,8 @@ public class MicArray extends SensorBase {
 
     private void writeViaSocket(){
         if(DEBUG)Log.d(TAG,"[MIC] write via socket..");
-        if(DEBUG)Log.d(TAG,"[MIC] output size:"+output.length);
-        if(DEBUG)Log.d(TAG,"[MIC] "+Arrays.toString(output));
+        if(DEBUG)Log.d(TAG,"[MIC] size: "+mic0.size());
+        if(DEBUG)Log.d(TAG,"[MIC] data: "+mic0.toString());
         Socket socket = null;
         DataOutputStream dataOutputStream = null;
         DataInputStream dataInputStream = null;
@@ -101,10 +99,9 @@ public class MicArray extends SensorBase {
             socket = new Socket(Config.EXTERNAL_DEBUG_IP, Config.EXTERNAL_DEBUG_PORT);
             dataOutputStream = new DataOutputStream(socket.getOutputStream());
             dataInputStream = new DataInputStream(socket.getInputStream());
-            int length = output.length;
-            for(int i=0;i<length;i++){
-                dataOutputStream.writeShort(output[i]);
-            }
+            Iterator<Short> it = mic0.iterator();
+            while (it.hasNext())
+                dataOutputStream.writeShort(it.next());
         } catch (UnknownHostException e) {
             e.printStackTrace();
         } catch (IOException e) {
