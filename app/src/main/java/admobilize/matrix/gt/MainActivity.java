@@ -20,9 +20,6 @@ package admobilize.matrix.gt;
 import android.Manifest;
 import android.app.Activity;
 import android.content.pm.PackageManager;
-import android.media.Ringtone;
-import android.media.RingtoneManager;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -36,16 +33,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import admobilize.matrix.gt.XC3Sprog.JNIPrimitives;
 import admobilize.matrix.gt.matrix.Everloop;
-import admobilize.matrix.gt.matrix.Humidity;
-import admobilize.matrix.gt.matrix.IMU;
 import admobilize.matrix.gt.matrix.MicArray;
-import admobilize.matrix.gt.matrix.Pressure;
-import admobilize.matrix.gt.matrix.UV;
 import admobilize.matrix.gt.matrix.Wishbone;
 
-import static admobilize.matrix.gt.matrix.Everloop.*;
+import static admobilize.matrix.gt.matrix.Everloop.LedValue;
 
 /**
  * Sample usage of the Matrix-Creator sensors and GPIO calls
@@ -53,30 +45,26 @@ import static admobilize.matrix.gt.matrix.Everloop.*;
  * REQUIREMENTS:
  *
  * - MatrixCreator Google Things image on RaspberryPi3
- * - MatrixCreator hat
+ * - MATRIXVoice Hat
  *
  * Created by Antonio Vanegas @hpsaturn on 12/19/16.
+ *
+ *  rev20170817 refactor for Voice hat
  */
 
 
-public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoadListener {
+public class MainActivity extends Activity {
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final boolean DEBUG = Config.DEBUG;
 
     private boolean SHOW_EVERLOOP_PROGRESS = true;
-    private boolean SHOW_SENSORS_OUTPUT = false;
     private static final int INTERVAL_POLLING_MS = 10;
 
     private Handler mHandler = new Handler();
     private SpiDevice spiDevice;
     private Wishbone wb;
     private Everloop everloop;
-    private Pressure pressure;
-    private Humidity humidity;
-    private IMU imuSensor;
-    private UV uvSensor;
     private boolean toggleColor;
-    private JNIPrimitives jni;
     private MicArray micArray;
 
     @Override
@@ -84,58 +72,50 @@ public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoad
         super.onCreate(savedInstanceState);
         Log.i(TAG, "Starting Matrix-Creator device config..");
 
+        // We need permission to access the camera
+        if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+            Log.e(TAG, "No permission for write on external storage!");
+        }
+
         PeripheralManagerService service = new PeripheralManagerService();
-        configSPI(service);
+        while(!configSPI(service)){
+            Log.d(TAG, "waiting for SPI..");
+        }
         initDevices(spiDevice);
         configMicDataInterrupt(service);
-/**
- *      ** ATTENTION**
- *      TODO: Automatic FPGA initialization not work because Google Things has bad performance, issue:
- *      https://code.google.com/p/android/issues/detail?id=231484
- *      testing branch: https://github.com/matrix-io/matrix-creator-android-things/tree/av/xc3sprog
- *
- *      startFPGAflashing();
- */
-        // Runnable that continuously update sensors and LED (Matrix LED on GPIO21)
-        mHandler.post(mPollingRunnable);
-    }
-
-    private void startFPGAflashing(PeripheralManagerService service){
-        jni=new JNIPrimitives(this,service,spiDevice);
-        jni.init();
-        jni.burnFirmware();
+        Log.d(TAG,"[MIC] starting capture..");
+//        mHandler.post(mPollingRunnable);
     }
 
     private void initDevices(SpiDevice spiDevice) {
         wb=new Wishbone(spiDevice);
-//        uvSensor = new UV(wb);
-//        pressure = new Pressure(wb);
-//        humidity = new Humidity(wb);
-//        imuSensor = new IMU(wb);
         micArray = new MicArray(wb);
         everloop = new Everloop(wb);
         everloop.clear();
         everloop.write(everloop.ledImage);
     }
 
-    private void configSPI(PeripheralManagerService service){
+    private boolean configSPI(PeripheralManagerService service){
         try {
             List<String> deviceList = service.getSpiBusList();
             if (deviceList.isEmpty()) {
                 Log.i(TAG, "No SPI bus available");
             } else {
                 Log.i(TAG, "List of available devices: " + deviceList);
+                spiDevice = service.openSpiDevice(BoardDefaults.getSpiBus());
+                spiDevice.setMode(SpiDevice.MODE3);
+                spiDevice.setFrequency(18000000);     // 18MHz
+                spiDevice.setBitsPerWord(8);          // 8 BPW
+                spiDevice.setBitJustification(false); // MSB first
+                return true;
             }
-            spiDevice = service.openSpiDevice(BoardDefaults.getSpiBus());
-            spiDevice.setMode(SpiDevice.MODE3);
-            spiDevice.setFrequency(18000000);     // 18MHz
-            spiDevice.setBitsPerWord(8);          // 8 BPW
-            spiDevice.setBitJustification(false); // MSB first
-
         } catch (IOException e) {
             Log.e(TAG, "Error on PeripheralIO API (SPI)", e);
             e.printStackTrace();
         }
+
+        return false;
     }
 
     public void configMicDataInterrupt(PeripheralManagerService service){
@@ -151,9 +131,10 @@ public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoad
         }
     }
 
-    int max_irq_samples=2000;
+    int max_irq_samples=1024;
     int irq_samples=0;
-    boolean sendData=false;
+    private boolean send_data;
+
     private GpioCallback onMicDataCallback = new GpioCallback() {
         @Override
         public boolean onGpioEdge(Gpio gpio) {
@@ -161,18 +142,19 @@ public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoad
                 irq_samples++;
                 micArray.read();
             }
-            else if (!sendData){
-                Log.i(TAG,"onMicDataCallback "+max_irq_samples+" samples reached!");
-                irq_samples=0;
-//                micArray.sendDataToDebugIp();
-                sendData=false;
+            else if(!send_data) {
+                Log.i(TAG,"[MIC] "+max_irq_samples+" samples");
+                micArray.sendDataToDebugIp();
+//                micArray.clearData();
+                send_data=true;
+//                irq_samples=0;
             }
             return super.onGpioEdge(gpio);
         }
         @Override
         public void onGpioError(Gpio gpio, int error) {
             super.onGpioError(gpio, error);
-            Log.w(TAG, "onMicDataCallback error event: "+gpio + "==>" + error);
+            Log.w(TAG, "[MIC] onMicDataCallback error event: "+gpio + "==>" + error);
         }
     };
 
@@ -197,35 +179,10 @@ public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoad
     private Runnable mPollingRunnable = new Runnable() {
 
         private long counter=0;
-
         @Override
         public void run() {
-
             // Exit Runnable if devices is already closed
             if (wb == null) return;
-            // mLedGpio.setValue(!mLedGpio.getValue());
-
-            if(SHOW_SENSORS_OUTPUT) {
-                String output;
-                // Read UVsensor
-                output = "UV: " + uvSensor.read() + "\t";
-                // Read Pressure device values
-                pressure.read();
-                output = output + "AL: " + pressure.getAltitude() + "\t";
-                output = output + "PR: " + pressure.getPressure() + "\t";
-                output = output + "TP: " + pressure.getTemperature() + "\t";
-                // Read Humidity device values
-                humidity.read();
-                output = output + "HM: " + humidity.getHumidity() + "\t";
-                output = output + "TP: " + humidity.getTemperature() + "\t";
-                // Read IMU device values
-                imuSensor.read();
-                output = output + "YW: " + imuSensor.getYaw() + "\t";
-                output = output + "PT: " + imuSensor.getPitch() + "\t";
-                output = output + "RL: " + imuSensor.getRoll() + "\t";
-                if (DEBUG) Log.d(TAG, output);
-            }
-
             if(SHOW_EVERLOOP_PROGRESS) {
                 drawProgress(everloop.ledImage, (int) counter);
                 everloop.write(everloop.ledImage);
@@ -250,21 +207,7 @@ public class MainActivity extends Activity implements JNIPrimitives.OnSystemLoad
             spiDevice.close();
         } catch (IOException e) {
             Log.e(TAG, "Error on PeripheralIO API", e);
-        } finally {
-            spiDevice = null;
         }
-    }
-
-    @Override
-    public void onSuccess(int msg) {
-        if(DEBUG)Log.i(TAG, "Load firmware!->"+msg);
-
-    }
-
-    @Override
-    public void onError(String err) {
-        if(DEBUG)Log.i(TAG, err);
-
     }
 
 }
