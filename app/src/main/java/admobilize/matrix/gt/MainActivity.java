@@ -24,20 +24,17 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 
-import com.google.android.things.pio.Gpio;
-import com.google.android.things.pio.GpioCallback;
 import com.google.android.things.pio.PeripheralManagerService;
 import com.google.android.things.pio.SpiDevice;
 
 import java.io.IOException;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
 
 import admobilize.matrix.gt.matrix.Everloop;
 import admobilize.matrix.gt.matrix.MicArray;
 import admobilize.matrix.gt.matrix.Wishbone;
-
-import static admobilize.matrix.gt.matrix.Everloop.LedValue;
 
 /**
  * Sample usage of the Matrix-Creator sensors and GPIO calls
@@ -64,7 +61,6 @@ public class MainActivity extends Activity {
     private SpiDevice spiDevice;
     private Wishbone wb;
     private Everloop everloop;
-    private boolean toggleColor;
     private MicArray micArray;
 
     @Override
@@ -82,18 +78,18 @@ public class MainActivity extends Activity {
         while(!configSPI(service)){
             Log.d(TAG, "waiting for SPI..");
         }
-        initDevices(spiDevice);
-        configMicDataInterrupt(service);
-        Log.d(TAG,"[MIC] starting capture..");
+        wb=new Wishbone(spiDevice);
+        initDevices(spiDevice,service);
 //        mHandler.post(mPollingRunnable);
     }
 
-    private void initDevices(SpiDevice spiDevice) {
-        wb=new Wishbone(spiDevice);
-        micArray = new MicArray(wb);
+    private void initDevices(SpiDevice spiDevice,PeripheralManagerService service) {
         everloop = new Everloop(wb);
         everloop.clear();
         everloop.write(everloop.ledImage);
+        micArray = new MicArray(wb,service);
+        Log.d(TAG,"[MIC] starting capture..");
+        micArray.capture(7,1024,onMicArrayListener);
     }
 
     private boolean configSPI(PeripheralManagerService service){
@@ -106,7 +102,7 @@ public class MainActivity extends Activity {
                 spiDevice = service.openSpiDevice(BoardDefaults.getSpiBus());
                 spiDevice.setMode(SpiDevice.MODE3);
                 spiDevice.setFrequency(18000000);     // 18MHz
-                spiDevice.setBitsPerWord(8);          // 8 BPW
+                spiDevice.setBitsPerWord(8);          // 8 BP
                 spiDevice.setBitJustification(false); // MSB first
                 return true;
             }
@@ -118,63 +114,18 @@ public class MainActivity extends Activity {
         return false;
     }
 
-    public void configMicDataInterrupt(PeripheralManagerService service){
-        try {
-            Gpio gpio = service.openGpio(BoardDefaults.getGPIO_MIC_DATA());
-            gpio.setDirection(Gpio.DIRECTION_IN);
-            gpio.setActiveType(Gpio.ACTIVE_LOW);
-            // Register for all state changes
-            gpio.setEdgeTriggerType(Gpio.EDGE_BOTH);
-            gpio.registerGpioCallback(onMicDataCallback);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    int max_irq_samples=1024;
-    int irq_samples=0;
-    private boolean send_data;
-
-    private GpioCallback onMicDataCallback = new GpioCallback() {
+    private MicArray.OnMicArrayListener onMicArrayListener =  new MicArray.OnMicArrayListener() {
         @Override
-        public boolean onGpioEdge(Gpio gpio) {
-            if(irq_samples<max_irq_samples){
-                irq_samples++;
-                micArray.read();
-            }
-            else if(!send_data) {
-                Log.i(TAG,"[MIC] "+max_irq_samples+" samples");
-                micArray.sendDataToDebugIp();
-//                micArray.clearData();
-                send_data=true;
-//                irq_samples=0;
-            }
-            return super.onGpioEdge(gpio);
+        public void onCapture(int mic, ArrayDeque<Short> mic_data) {
+            Log.d(TAG, "[MIC] :"+mic+" data: "+mic_data.toString());
+            micArray.sendDataToDebugIp(mic);
         }
+
         @Override
-        public void onGpioError(Gpio gpio, int error) {
-            super.onGpioError(gpio, error);
-            Log.w(TAG, "[MIC] onMicDataCallback error event: "+gpio + "==>" + error);
+        public void onCaptureAll(ArrayList<ArrayDeque> mic_array) {
+            Log.d(TAG, "[MIC] buffers: "+mic_array.toString());
         }
     };
-
-    void setColor(ArrayList<LedValue>leds, int pos, int r, int g, int b, int w) {
-        leds.get(pos % 18).red   = (byte) r;
-        leds.get(pos % 18).green = (byte) g;
-        leds.get(pos % 18).blue  = (byte) b;
-        leds.get(pos % 18).white = (byte) w;
-    }
-
-    void drawProgress(ArrayList<LedValue>leds, int counter) {
-        if(counter % 18 ==0) toggleColor=!toggleColor;
-        int min = counter % 18;
-        int solid = 18;
-        for (int i = 0; i <= min; i++) {
-            if(toggleColor) setColor(leds, i, i/3, solid/5, 0, 0);
-            else setColor(leds, i, solid/5, i/3, 0, 0);
-            solid=18-i;
-        }
-    }
 
     private Runnable mPollingRunnable = new Runnable() {
 
@@ -184,7 +135,7 @@ public class MainActivity extends Activity {
             // Exit Runnable if devices is already closed
             if (wb == null) return;
             if(SHOW_EVERLOOP_PROGRESS) {
-                drawProgress(everloop.ledImage, (int) counter);
+                everloop.drawProgress((int) counter);
                 everloop.write(everloop.ledImage);
                 counter++;
             }
