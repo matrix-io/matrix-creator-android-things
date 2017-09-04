@@ -81,7 +81,7 @@ public class MicArray extends SensorBase {
         }
     }
 
-    public void configMicDataInterrupt(PeripheralManagerService service){
+    private void configMicDataInterrupt(PeripheralManagerService service){
         try {
             gpio = service.openGpio(BoardDefaults.getGPIO_MIC_DATA());
             gpio.setDirection(Gpio.DIRECTION_IN);
@@ -199,7 +199,6 @@ public class MicArray extends SensorBase {
                 }
             }
 
-            clear();
         }
     }
 
