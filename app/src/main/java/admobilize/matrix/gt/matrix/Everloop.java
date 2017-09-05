@@ -10,11 +10,14 @@ import java.util.Iterator;
 public class Everloop extends SensorBase {
 
     public ArrayList<Everloop.LedValue> ledImage = new ArrayList<>();
-
     private boolean toggleColor;
+    private int led_count=35;
+    public static int MATRIX_CREATOR = 0;
+    public static int MATRIX_VOICE = 1;
 
-    public Everloop(Wishbone wb) {
+    public Everloop(Wishbone wb,int matrix_board_type) {
         super(wb);
+        if(matrix_board_type==MATRIX_VOICE)led_count=18;
         init();
     }
 
@@ -51,7 +54,6 @@ public class Everloop extends SensorBase {
         }
     }
 
-
     public void setColor(int pos, int r, int g, int b, int w) {
         ledImage.get(pos % 18).red   = (byte) r;
         ledImage.get(pos % 18).green = (byte) g;
@@ -60,18 +62,18 @@ public class Everloop extends SensorBase {
     }
 
     public void drawProgress(int counter) {
-        if(counter % 18 ==0) toggleColor=!toggleColor;
-        int min = counter % 18;
-        int solid = 18;
+        if(counter % led_count ==0) toggleColor=!toggleColor;
+        int min = counter % led_count;
+        int solid = led_count;
         for (int i = 0; i <= min; i++) {
             if(toggleColor) setColor(i, i/3, solid/5, 0, 0);
             else setColor(i, solid/5, i/3, 0, 0);
-            solid=18-i;
+            solid=led_count-i;
         }
     }
 
     public void init(){
-        for(int i=0;i<18;i++){
+        for(int i=0;i<led_count;i++){
             ledImage.add(new LedValue());
         }
     }

@@ -17,9 +17,7 @@
 
 package admobilize.matrix.gt;
 
-import android.Manifest;
 import android.app.Activity;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -30,10 +28,15 @@ import com.google.android.things.pio.SpiDevice;
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import admobilize.matrix.gt.matrix.Everloop;
+import admobilize.matrix.gt.matrix.Humidity;
+import admobilize.matrix.gt.matrix.IMU;
 import admobilize.matrix.gt.matrix.MicArray;
+import admobilize.matrix.gt.matrix.Pressure;
+import admobilize.matrix.gt.matrix.UV;
 import admobilize.matrix.gt.matrix.Wishbone;
 
 /**
@@ -46,47 +49,55 @@ import admobilize.matrix.gt.matrix.Wishbone;
  *
  * Created by Antonio Vanegas @hpsaturn on 12/19/16.
  *
- *  rev20170817 refactor for Voice hat
+ *  rev20170817 refactor for MATRIXVoice hat
+ *  rev20170901 micarray working, all mics
  */
-
 
 public class MainActivity extends Activity {
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final boolean DEBUG = Config.DEBUG;
 
-    private boolean SHOW_EVERLOOP_PROGRESS = true;
-    private static final int INTERVAL_POLLING_MS = 10;
+    private static final boolean ENABLE_EVERLOOP_PROGRESS = true;
+    private static final boolean ENABLE_LOG_SENSORS       = true;
+    private static final boolean ENABLE_MICARRAY_DEBUG    = false;
+    private static final int     INTERVAL_POLLING_MS      = 100;
 
     private Handler mHandler = new Handler();
     private SpiDevice spiDevice;
     private Wishbone wb;
     private Everloop everloop;
     private MicArray micArray;
+    private Pressure pressure;
+    private Humidity humidity;
+    private IMU imuSensor;
+    private UV uvSensor;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.i(TAG, "Starting Matrix-Creator device config..");
 
-        // We need permission to access the camera
-        if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
-            Log.e(TAG, "No permission for write on external storage!");
-        }
-
         PeripheralManagerService service = new PeripheralManagerService();
         while(!configSPI(service)){
             Log.d(TAG, "waiting for SPI..");
         }
         wb=new Wishbone(spiDevice);
-        initDevices(spiDevice,service);
-//        mHandler.post(mPollingRunnable);
+        initDevices(service);
+        mHandler.post(mPollingRunnable);
     }
 
-    private void initDevices(SpiDevice spiDevice,PeripheralManagerService service) {
-        everloop = new Everloop(wb);
+    private void initDevices(PeripheralManagerService service) {
+        pressure = new Pressure(wb);
+        humidity = new Humidity(wb);
+        imuSensor = new IMU(wb);
+        uvSensor = new UV(wb);
+
+        // TODO: autodetection of hat via SPI register
+        everloop = new Everloop(wb,Everloop.MATRIX_VOICE); // NOTE: please change to right board
         everloop.clear();
         everloop.write(everloop.ledImage);
+
         micArray = new MicArray(wb,service);
         Log.d(TAG,"[MIC] starting capture..");
         micArray.capture(7,1024,onMicArrayListener);
@@ -117,13 +128,21 @@ public class MainActivity extends Activity {
     private MicArray.OnMicArrayListener onMicArrayListener =  new MicArray.OnMicArrayListener() {
         @Override
         public void onCapture(int mic, ArrayDeque<Short> mic_data) {
-            Log.d(TAG, "[MIC] :"+mic+" data: "+mic_data.toString());
-            micArray.sendDataToDebugIp(mic);
+            Log.d(TAG, "[MIC] mic: "+mic+" size :"+mic_data.size());
+            Log.d(TAG, "[MIC] mic: "+mic+" data :"+mic_data.toString());
+
+            // TODO: write to SD not work! GT not support EXTERNALSTORAGE permission
+            if(ENABLE_MICARRAY_DEBUG)micArray.sendDataToDebugIp(mic);
         }
 
         @Override
         public void onCaptureAll(ArrayList<ArrayDeque> mic_array) {
-            Log.d(TAG, "[MIC] buffers: "+mic_array.toString());
+            Log.d(TAG, "[MIC] all mics data size:");
+            Iterator<ArrayDeque> it = mic_array.iterator();
+            int mic=0;
+            while (it.hasNext()){
+                Log.d(TAG, "[MIC] mic:"+mic+++" size: "+it.next().size());
+            }
         }
     };
 
@@ -134,7 +153,28 @@ public class MainActivity extends Activity {
         public void run() {
             // Exit Runnable if devices is already closed
             if (wb == null) return;
-            if(SHOW_EVERLOOP_PROGRESS) {
+            if(ENABLE_LOG_SENSORS) {
+                String output;
+                // Read UVsensor
+                output = "UV: " + uvSensor.read() + "\t";
+                // Read Pressure device values
+                pressure.read();
+                output = output + "AL: " + pressure.getAltitude() + "\t";
+                output = output + "PR: " + pressure.getPressure() + "\t";
+                output = output + "TP: " + pressure.getTemperature() + "\t";
+                // Read Humidity device values
+                humidity.read();
+                output = output + "HM: " + humidity.getHumidity() + "\t";
+                output = output + "TP: " + humidity.getTemperature() + "\t";
+                // Read IMU device values
+                imuSensor.read();
+                output = output + "YW: " + imuSensor.getYaw() + "\t";
+                output = output + "PT: " + imuSensor.getPitch() + "\t";
+                output = output + "RL: " + imuSensor.getRoll() + "\t";
+                Log.d(TAG,output);
+            }
+
+            if(ENABLE_EVERLOOP_PROGRESS) {
                 everloop.drawProgress((int) counter);
                 everloop.write(everloop.ledImage);
                 counter++;
@@ -152,7 +192,6 @@ public class MainActivity extends Activity {
         mHandler.removeCallbacks(mPollingRunnable);
         if(DEBUG)Log.i(TAG, "Closing devices and GPIO");
         try {
-            SHOW_EVERLOOP_PROGRESS=false;
             everloop.clear();
             everloop.write(everloop.ledImage);
             spiDevice.close();

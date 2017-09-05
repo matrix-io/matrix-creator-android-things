@@ -141,7 +141,7 @@ public class MicArray extends SensorBase {
     }
 
     public void sendDataToDebugIp(int mic){
-        // TODO: write to SD not work! maybe GT not support EXTERNALSTORAGE permission
+        // TODO: write to SD not work! GT not support EXTERNALSTORAGE permission
         new sendData(mic).execute(); // only for debugging, receive data with netcat
     }
 
@@ -163,9 +163,6 @@ public class MicArray extends SensorBase {
     private void writeViaSocket(int mic){
         ArrayDeque current_mic = micarray.get(mic);
         if(DEBUG)Log.d(TAG,"[MIC] write via socket..");
-        if(DEBUG)Log.d(TAG,"[MIC] mic: "+mic);
-        if(DEBUG)Log.d(TAG,"[MIC] size: "+current_mic.size());
-        if(DEBUG)Log.d(TAG,"[MIC] array size: "+micarray.size());
         Socket socket = null;
         DataOutputStream dataOutputStream = null;
         DataInputStream dataInputStream = null;
