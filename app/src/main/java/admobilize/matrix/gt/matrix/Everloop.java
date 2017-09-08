@@ -21,7 +21,7 @@ public class Everloop extends SensorBase {
         init();
     }
 
-    public boolean write(ArrayList<LedValue> ledImage) {
+    public boolean write() {
         if (wb==null) return false;
         LedValue led;
         byte[] wb_data_buffer = new byte[2];
