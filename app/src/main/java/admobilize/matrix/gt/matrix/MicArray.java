@@ -53,14 +53,25 @@ public class MicArray extends SensorBase {
 
     public MicArray(Wishbone wb, PeripheralManagerService service) {
         super(wb);
-        micarray.add(mic3);  // Order for MEMs position on the board
-        micarray.add(mic4);
-        micarray.add(mic5);
-        micarray.add(mic6);
-        micarray.add(mic7);
-        micarray.add(mic0);
-        micarray.add(mic1);
-        micarray.add(mic2);
+        if(Config.MATRIX_CREATOR) {
+            micarray.add(mic3);  // Order for MEMs position on the board
+            micarray.add(mic4);
+            micarray.add(mic5);
+            micarray.add(mic6);
+            micarray.add(mic7);
+            micarray.add(mic0);
+            micarray.add(mic1);
+            micarray.add(mic2);
+        }else{
+            micarray.add(mic0);  // Order for MEMs position on the MATRIX Voice board.
+            micarray.add(mic1);
+            micarray.add(mic2);
+            micarray.add(mic3);
+            micarray.add(mic4);
+            micarray.add(mic5);
+            micarray.add(mic6);
+            micarray.add(mic7);
+        }
         configMicDataInterrupt(service);
     }
 
@@ -141,8 +152,6 @@ public class MicArray extends SensorBase {
             mic7.add(ByteBuffer.wrap(data,(i*8+7)*2,2).order(ByteOrder.BIG_ENDIAN).getShort());
         }
     }
-
-
 
     public void sendDataToDebugIp(int mic){
         // TODO: write to SD not work! GT not support EXTERNALSTORAGE permission
