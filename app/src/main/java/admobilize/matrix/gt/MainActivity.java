@@ -58,7 +58,7 @@ public class MainActivity extends Activity {
     private static final boolean DEBUG = Config.DEBUG;
 
     private static final boolean ENABLE_EVERLOOP_PROGRESS = false;
-    private static final boolean ENABLE_DRAW_MICS         = true&&!ENABLE_EVERLOOP_PROGRESS;
+    private static final boolean ENABLE_DRAW_MICS         = true  && !ENABLE_EVERLOOP_PROGRESS;
     private static final boolean ENABLE_LOG_SENSORS       = false;
     private static final boolean ENABLE_MICARRAY_DEBUG    = false;
     private static final int     INTERVAL_POLLING_MS      = 500;

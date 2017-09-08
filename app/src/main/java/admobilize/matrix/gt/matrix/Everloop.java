@@ -1,6 +1,5 @@
 package admobilize.matrix.gt.matrix;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -75,19 +74,21 @@ public class Everloop extends SensorBase {
     public void drawMicArrayEnergy(ArrayList<Short> mic_array_energy){
         ledImage.clear();
         Iterator<Short> it = mic_array_energy.iterator();
+        int mic=0;
         while(it.hasNext()) {
-            ledImage.add(new LedValue(0, 5, 0, 0)); // seperator
+            addMicSeperator();
             addMicSegment(it.next()); // mic energy
+            if(mic==2)addMicSeperator();
+            if(mic==5)addMicSeperator();
+            mic++;
         }
-        ledImage.add(new LedValue(0, 5, 0, 0)); // seperator
-        ledImage.add(new LedValue(0, 5, 0, 0)); // seperator
-        ledImage.add(new LedValue(0, 5, 0, 0)); // seperator
+        addMicSeperator();
     }
 
     private void addMicSegment(short m0) {
         for (int i=0;i<3;i++){
             LedValue ledM0 = new LedValue();
-            if(1000<m0 && m0<8192)
+            if(100<m0 && m0<8192)
                 ledM0 = new LedValue(getLedValueFromEnergy(m0)/3, 4, 0, 0);
             if(8192<m0 && m0<16384)
                 ledM0 = new LedValue(getLedValueFromEnergy(m0)/2, 4, 0, 0);
@@ -97,6 +98,10 @@ public class Everloop extends SensorBase {
                 ledM0 = new LedValue(getLedValueFromEnergy(m0), 0, 0, 0);
             ledImage.add(ledM0);
         }
+    }
+
+    private void addMicSeperator(){
+        ledImage.add(new LedValue(0, 2, 0, 0)); // seperator
     }
 
     private short getLedValueFromEnergy(short m0){
