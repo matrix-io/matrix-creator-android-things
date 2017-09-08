@@ -58,9 +58,10 @@ public class MainActivity extends Activity {
     private static final boolean DEBUG = Config.DEBUG;
 
     private static final boolean ENABLE_EVERLOOP_PROGRESS = false;
+    private static final boolean ENABLE_DRAW_MICS         = true&&!ENABLE_EVERLOOP_PROGRESS;
     private static final boolean ENABLE_LOG_SENSORS       = false;
     private static final boolean ENABLE_MICARRAY_DEBUG    = false;
-    private static final int     INTERVAL_POLLING_MS      = 1000;
+    private static final int     INTERVAL_POLLING_MS      = 500;
 
     private Handler mHandler = new Handler();
     private SpiDevice spiDevice;
@@ -100,7 +101,7 @@ public class MainActivity extends Activity {
 
         micArray = new MicArray(wb,service);
         Log.d(TAG,"[MIC] starting capture..");
-        micArray.capture(7,4,true,onMicArrayListener);
+        micArray.capture(7,2,true,onMicArrayListener);
     }
 
     private boolean configSPI(PeripheralManagerService service){
@@ -125,13 +126,11 @@ public class MainActivity extends Activity {
         return false;
     }
 
-    private short max_energy=0;
     private MicArray.OnMicArrayListener onMicArrayListener =  new MicArray.OnMicArrayListener() {
         @Override
         public void onCapture(int mic, ArrayDeque<Short> mic_data) {
 //            Log.d(TAG, "[MIC] mic:"+mic+" size :"+mic_data.size());
 //            Log.d(TAG, "[MIC] mic:"+mic+" data :"+mic_data.toString());
-
             // TODO: write to SD not work! GT not support EXTERNALSTORAGE permission
             if(ENABLE_MICARRAY_DEBUG)micArray.sendDataToDebugIp(mic);
             else micArray.clear();
@@ -148,8 +147,10 @@ public class MainActivity extends Activity {
                 micArrayEnergy.add(energy);
                 if(DEBUG)Log.d(TAG, "[MIC] mic:"+mic+++" energy "+energy);
             }
-            everloop.drawMicArrayEnergy(micArrayEnergy);
-            everloop.write();
+            if(ENABLE_DRAW_MICS) {
+                everloop.drawMicArrayEnergy(micArrayEnergy);
+                everloop.write();
+            }
         }
     };
 

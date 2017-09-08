@@ -53,7 +53,7 @@ public class MicArray extends SensorBase {
 
     public MicArray(Wishbone wb, PeripheralManagerService service) {
         super(wb);
-        micarray.add(mic3);
+        micarray.add(mic3);  // Order for MEMs position on the board
         micarray.add(mic4);
         micarray.add(mic5);
         micarray.add(mic6);

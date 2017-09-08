@@ -75,12 +75,12 @@ public class Everloop extends SensorBase {
     public void drawMicArrayEnergy(ArrayList<Short> mic_array_energy){
         ledImage.clear();
         Iterator<Short> it = mic_array_energy.iterator();
-        ledImage.add(new LedValue(0, 5, 0, 0)); // seperator
-        ledImage.add(new LedValue(0, 5, 0, 0)); // seperator
         while(it.hasNext()) {
             ledImage.add(new LedValue(0, 5, 0, 0)); // seperator
             addMicSegment(it.next()); // mic energy
         }
+        ledImage.add(new LedValue(0, 5, 0, 0)); // seperator
+        ledImage.add(new LedValue(0, 5, 0, 0)); // seperator
         ledImage.add(new LedValue(0, 5, 0, 0)); // seperator
     }
 
