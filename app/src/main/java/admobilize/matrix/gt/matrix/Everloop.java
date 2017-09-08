@@ -55,10 +55,10 @@ public class Everloop extends SensorBase {
     }
 
     public void setColor(int pos, int r, int g, int b, int w) {
-        ledImage.get(pos % 18).red   = (byte) r;
-        ledImage.get(pos % 18).green = (byte) g;
-        ledImage.get(pos % 18).blue  = (byte) b;
-        ledImage.get(pos % 18).white = (byte) w;
+        ledImage.get(pos % led_count).red   = (byte) r;
+        ledImage.get(pos % led_count).green = (byte) g;
+        ledImage.get(pos % led_count).blue  = (byte) b;
+        ledImage.get(pos % led_count).white = (byte) w;
     }
 
     public void drawProgress(int counter) {
