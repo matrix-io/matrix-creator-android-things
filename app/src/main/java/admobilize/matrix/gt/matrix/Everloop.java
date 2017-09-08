@@ -1,5 +1,6 @@
 package admobilize.matrix.gt.matrix;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -38,7 +39,6 @@ public class Everloop extends SensorBase {
             wb.SpiWrite((short)(kEverloopBaseAddress + addr_offset+1), wb_data_buffer, (short) 0);
             addr_offset = addr_offset + 2;
         }
-        this.ledImage=ledImage;
         return true;
     }
 
@@ -72,6 +72,37 @@ public class Everloop extends SensorBase {
         }
     }
 
+    public void drawMicArrayEnergy(ArrayList<Short> mic_array_energy){
+        ledImage.clear();
+        Iterator<Short> it = mic_array_energy.iterator();
+        ledImage.add(new LedValue(0, 5, 0, 0)); // seperator
+        while(it.hasNext()) {
+            ledImage.add(new LedValue(0, 5, 0, 0)); // seperator
+            addMicSegment(it.next()); // mic energy
+        }
+        ledImage.add(new LedValue(0, 5, 0, 0)); // seperator
+        ledImage.add(new LedValue(0, 5, 0, 0)); // seperator
+    }
+
+    private void addMicSegment(short m0) {
+        for (int i=0;i<3;i++){
+            LedValue ledM0 = new LedValue();
+            if(1000<m0 && m0<8192)
+                ledM0 = new LedValue(getLedValueFromEnergy(m0)/3, 4, 0, 0);
+            if(8192<m0 && m0<16384)
+                ledM0 = new LedValue(getLedValueFromEnergy(m0)/2, 4, 0, 0);
+            if(16384<m0 && m0<24576)
+                ledM0 = new LedValue(getLedValueFromEnergy(m0), 4, 0, 0);
+            if(24576<m0 && m0<32768)
+                ledM0 = new LedValue(getLedValueFromEnergy(m0), 0, 0, 0);
+            ledImage.add(ledM0);
+        }
+    }
+
+    private short getLedValueFromEnergy(short m0){
+        return (short) ((m0*255)/32768);
+    }
+
     public void init(){
         for(int i=0;i<led_count;i++){
             ledImage.add(new LedValue());
@@ -79,10 +110,28 @@ public class Everloop extends SensorBase {
     }
 
     public static class LedValue {
+
         public byte red;
         public byte green;
         public byte blue;
         public byte white;
+
+        public LedValue() {
+        }
+
+        public LedValue(byte red, byte green, byte blue, byte white) {
+            this.red = red;
+            this.green = green;
+            this.blue = blue;
+            this.white = white;
+        }
+
+        public LedValue(int red, int green, int blue, int white) {
+            this.red = (byte) red;
+            this.green = (byte) green;
+            this.blue = (byte) blue;
+            this.white = (byte) white;
+        }
     }
 
 }
