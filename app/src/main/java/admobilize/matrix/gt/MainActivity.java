@@ -94,7 +94,7 @@ public class MainActivity extends Activity {
         uvSensor = new UV(wb);
 
         // TODO: autodetection of hat via SPI register
-        everloop = new Everloop(wb,Everloop.MATRIX_VOICE); // NOTE: please change to right board
+        everloop = new Everloop(wb,Everloop.MATRIX_CREATOR); // NOTE: please change to right board
         everloop.clear();
         everloop.write(everloop.ledImage);
 

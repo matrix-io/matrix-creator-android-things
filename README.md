@@ -1,9 +1,7 @@
-Matrix Creator-Android Things (ALPHA)
+MATRIX-Creator and MATRIX-Voice Android Things (BETA)
 =====================================
 
-This Android Things app runs basic tests for Matrix sensors and Everloop ring.
-
-**IMPORTANT**: Please, note that these samples are not necessarily the easiest way because the Android Things source code and documentation have not been published or completed and have some platform [issues](https://github.com/androidthings/sample-simplepio/issues/2)
+This Android Things app runs basic tests for MATRIX sensors, Everloop ring LEDs and mic array.
 
 Status
 ------
@@ -31,6 +29,8 @@ Pre-requisites
 ### Firmware installation 
 
 **NOTE: (only for MATRIXCreator, for MATRIX Voice skip this step)**
+
+**IMPORTANT:** Please, note that these samples are not necessarily the easiest way because the Android Things source code and documentation have not been published or completed and have some platform [issues](https://github.com/androidthings/sample-simplepio/issues/2)
 
 For now you can test MATRIX Creator with Google Things, for this we need FPGA burner running from root privileges, for it please follow next steps:
 
@@ -83,6 +83,15 @@ On your pc:
 #### Troubleshooting
 
 - if you get sensors on 0, please repeat step 6.
+- if you get sensors like this, ommit and run demo, all are ok.
+
+    ```bash
+    IMUY:0°    IMUR:0°    IMUP:0°
+    HUMI:5.7e-42%    HTMP:-3.8e-15°C    UVID:0
+    PRSS:-3.8537e-15    PrAL:0    PrTP:0
+    MCU :0x0    VER :0xa793c000
+    ```
+    
 - if you shutdown your raspberryPi, please repeat steps: 2 and 6. (root and reprograming FPGA)
 
 Run demo application
@@ -120,13 +129,29 @@ AndroidThings not have or not support `EXTERNALSTORAGE` permissions for save cap
     nc -l 2999 > audio.raw
     ```
 
-4. Rebuild and launch demo app: 
+4. Rebuild and launch demo app, the mic will starting capturing 1024 samples (~8s): 
 
     ```bash
     ./gradlew installDebug
     adb shell am start admobilize.matrix.gt/.MainActivity
     ```
 
+    You should be get this on `adb logcat`:
+    ```java
+     D/MainActivity: [MIC] starting capture..
+     I/MicArray: [MIC] 1024 samples
+     D/MainActivity: [MIC] mic: 7 size :131072
+     D/MainActivity: [MIC] mic: 7 data :[-7169, -7169, -6913, -6657, -6657, ...
+     D/MainActivity: [MIC] all mics data size:
+     D/MainActivity: [MIC] mic:0 size: 131072
+     D/MainActivity: [MIC] mic:1 size: 131072
+     D/MainActivity: [MIC] mic:2 size: 131072
+     D/MainActivity: [MIC] mic:3 size: 131072
+     D/MainActivity: [MIC] mic:4 size: 131072
+     D/MainActivity: [MIC] mic:5 size: 131072
+     D/MainActivity: [MIC] mic:6 size: 131072
+     D/MainActivity: [MIC] mic:7 size: 131072
+    ```
 5. When nc come back to shell your obtain mic data, then reconvert and play it with:
     ```bash
     sox -r 16000 -c 1 -e signed  -b 16 audio.raw audio.wav

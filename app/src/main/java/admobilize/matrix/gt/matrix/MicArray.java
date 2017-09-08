@@ -105,7 +105,6 @@ public class MicArray extends SensorBase {
                 listener.onCapture(current_mic,micarray.get(current_mic));
                 listener.onCaptureAll(micarray);
                 irq_samples=max_irq_samples+1; // STOP CALLBACK
-                gpio.unregisterGpioCallback(onMicDataCallback);
             }
             return super.onGpioEdge(gpio);
         }
@@ -162,7 +161,8 @@ public class MicArray extends SensorBase {
 
     private void writeViaSocket(int mic){
         ArrayDeque current_mic = micarray.get(mic);
-        if(DEBUG)Log.d(TAG,"[MIC] write via socket..");
+        if(DEBUG)Log.d(TAG, "[MIC] write via socket..");
+        if(DEBUG)Log.d(TAG, "[MIC] mic: "+mic+" size :"+current_mic.size());
         Socket socket = null;
         DataOutputStream dataOutputStream = null;
         DataInputStream dataInputStream = null;
