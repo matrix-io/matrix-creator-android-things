@@ -101,9 +101,9 @@ public class MicArray extends SensorBase {
                 read();
             }
             else if(irq_samples==max_irq_samples) {
-                Log.i(TAG,"[MIC] "+max_irq_samples+" samples");
-                listener.onCapture(current_mic,micarray.get(current_mic));
+                Log.i(TAG,"[MIC] "+max_irq_samples+" samples ready");
                 listener.onCaptureAll(micarray);
+                listener.onCapture(current_mic,micarray.get(current_mic));
                 irq_samples=max_irq_samples+1; // STOP CALLBACK
             }
             return super.onGpioEdge(gpio);
@@ -161,8 +161,8 @@ public class MicArray extends SensorBase {
 
     private void writeViaSocket(int mic){
         ArrayDeque current_mic = micarray.get(mic);
-        if(DEBUG)Log.d(TAG, "[MIC] write via socket..");
-        if(DEBUG)Log.d(TAG, "[MIC] mic: "+mic+" size :"+current_mic.size());
+        if(DEBUG)Log.i(TAG, "[MIC] write via socket..");
+        if(DEBUG)Log.i(TAG, "[MIC] ==> sending mic:"+mic+" size :"+current_mic.size());
         Socket socket = null;
         DataOutputStream dataOutputStream = null;
         DataInputStream dataInputStream = null;
@@ -174,9 +174,12 @@ public class MicArray extends SensorBase {
             Iterator<Short> it = current_mic.iterator();
             while (it.hasNext())
                 dataOutputStream.writeShort(it.next());
+            if(DEBUG)Log.i(TAG, "[MIC] ==> output ready to "+Config.EXTERNAL_DEBUG_IP+":"+Config.EXTERNAL_DEBUG_PORT+" done.");
         } catch (UnknownHostException e) {
+            if(DEBUG)Log.e(TAG, "[MIC] sending mic data error! "+e.getMessage());
             e.printStackTrace();
         } catch (IOException e) {
+            if(DEBUG)Log.e(TAG, "[MIC] sending mic data error! "+e.getMessage());
             e.printStackTrace();
         }
         finally{
@@ -195,11 +198,10 @@ public class MicArray extends SensorBase {
                     e.printStackTrace();
                 }
             }
-
         }
     }
 
-    private void clear() {
+    public void clear() {
         Iterator<ArrayDeque> it = micarray.iterator();
         while (it.hasNext())it.next().clear();
     }

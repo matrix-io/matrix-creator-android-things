@@ -58,7 +58,7 @@ public class MainActivity extends Activity {
     private static final boolean DEBUG = Config.DEBUG;
 
     private static final boolean ENABLE_EVERLOOP_PROGRESS = true;
-    private static final boolean ENABLE_LOG_SENSORS       = true;
+    private static final boolean ENABLE_LOG_SENSORS       = false;
     private static final boolean ENABLE_MICARRAY_DEBUG    = false;
     private static final int     INTERVAL_POLLING_MS      = 100;
 
@@ -96,7 +96,7 @@ public class MainActivity extends Activity {
         // TODO: autodetection of hat via SPI register
         everloop = new Everloop(wb,Everloop.MATRIX_CREATOR); // NOTE: please change to right board
         everloop.clear();
-        everloop.write(everloop.ledImage);
+        everloop.write();
 
         micArray = new MicArray(wb,service);
         Log.d(TAG,"[MIC] starting capture..");
@@ -128,11 +128,12 @@ public class MainActivity extends Activity {
     private MicArray.OnMicArrayListener onMicArrayListener =  new MicArray.OnMicArrayListener() {
         @Override
         public void onCapture(int mic, ArrayDeque<Short> mic_data) {
-            Log.d(TAG, "[MIC] mic: "+mic+" size :"+mic_data.size());
-            Log.d(TAG, "[MIC] mic: "+mic+" data :"+mic_data.toString());
+            Log.d(TAG, "[MIC] mic:"+mic+" size :"+mic_data.size());
+            Log.d(TAG, "[MIC] mic:"+mic+" data :"+mic_data.toString());
 
             // TODO: write to SD not work! GT not support EXTERNALSTORAGE permission
             if(ENABLE_MICARRAY_DEBUG)micArray.sendDataToDebugIp(mic);
+            else micArray.clear();
         }
 
         @Override
@@ -176,7 +177,7 @@ public class MainActivity extends Activity {
 
             if(ENABLE_EVERLOOP_PROGRESS) {
                 everloop.drawProgress((int) counter);
-                everloop.write(everloop.ledImage);
+                everloop.write();
                 counter++;
             }
             // Reschedule the same runnable in {#INTERVAL_POLLING_MS} milliseconds
@@ -193,7 +194,7 @@ public class MainActivity extends Activity {
         if(DEBUG)Log.i(TAG, "Closing devices and GPIO");
         try {
             everloop.clear();
-            everloop.write(everloop.ledImage);
+            everloop.write();
             spiDevice.close();
         } catch (IOException e) {
             Log.e(TAG, "Error on PeripheralIO API", e);
