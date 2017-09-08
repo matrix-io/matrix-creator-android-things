@@ -57,10 +57,10 @@ public class MainActivity extends Activity {
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final boolean DEBUG = Config.DEBUG;
 
-    private static final boolean ENABLE_EVERLOOP_PROGRESS = true;
+    private static final boolean ENABLE_EVERLOOP_PROGRESS = false;
     private static final boolean ENABLE_LOG_SENSORS       = false;
     private static final boolean ENABLE_MICARRAY_DEBUG    = false;
-    private static final int     INTERVAL_POLLING_MS      = 100;
+    private static final int     INTERVAL_POLLING_MS      = 1000;
 
     private Handler mHandler = new Handler();
     private SpiDevice spiDevice;
@@ -100,7 +100,7 @@ public class MainActivity extends Activity {
 
         micArray = new MicArray(wb,service);
         Log.d(TAG,"[MIC] starting capture..");
-        micArray.capture(7,1024,onMicArrayListener);
+        micArray.capture(7,4,true,onMicArrayListener);
     }
 
     private boolean configSPI(PeripheralManagerService service){
@@ -125,11 +125,12 @@ public class MainActivity extends Activity {
         return false;
     }
 
+    private short max_energy=0;
     private MicArray.OnMicArrayListener onMicArrayListener =  new MicArray.OnMicArrayListener() {
         @Override
         public void onCapture(int mic, ArrayDeque<Short> mic_data) {
-            Log.d(TAG, "[MIC] mic:"+mic+" size :"+mic_data.size());
-            Log.d(TAG, "[MIC] mic:"+mic+" data :"+mic_data.toString());
+//            Log.d(TAG, "[MIC] mic:"+mic+" size :"+mic_data.size());
+//            Log.d(TAG, "[MIC] mic:"+mic+" data :"+mic_data.toString());
 
             // TODO: write to SD not work! GT not support EXTERNALSTORAGE permission
             if(ENABLE_MICARRAY_DEBUG)micArray.sendDataToDebugIp(mic);
@@ -138,14 +139,32 @@ public class MainActivity extends Activity {
 
         @Override
         public void onCaptureAll(ArrayList<ArrayDeque> mic_array) {
-            Log.d(TAG, "[MIC] all mics data size:");
+            if(DEBUG)Log.d(TAG, "[MIC] all mics data size:");
             Iterator<ArrayDeque> it = mic_array.iterator();
             int mic=0;
+            ArrayList<Short>micArrayEnergy=new ArrayList<>();
             while (it.hasNext()){
-                Log.d(TAG, "[MIC] mic:"+mic+++" size: "+it.next().size());
+                short energy = getEnergy(it.next());
+                micArrayEnergy.add(energy);
+                if(DEBUG)Log.d(TAG, "[MIC] mic:"+mic+++" energy "+energy);
             }
+            everloop.drawMicArrayEnergy(micArrayEnergy);
+            everloop.write();
         }
     };
+
+    private short getEnergy(ArrayDeque<Short> mic) {
+        Iterator<Short> it = mic.iterator();
+
+        short energy=0;
+        while(it.hasNext()){
+            short val = it.next();
+            if(val>=0)
+            energy = (short) (energy+(val*val));
+        }
+        return (short) Math.abs(energy);
+    }
+
 
     private Runnable mPollingRunnable = new Runnable() {
 
