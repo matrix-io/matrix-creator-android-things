@@ -57,11 +57,12 @@ public class MainActivity extends Activity {
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final boolean DEBUG = Config.DEBUG;
 
-    private static final boolean ENABLE_EVERLOOP_PROGRESS = false;
-    private static final boolean ENABLE_DRAW_MICS         = true  && !ENABLE_EVERLOOP_PROGRESS;
-    private static final boolean ENABLE_LOG_SENSORS       = false;
-    private static final boolean ENABLE_MICARRAY_DEBUG    = false;
-    private static final int     INTERVAL_POLLING_MS      = 500;
+    private static final boolean ENABLE_EVERLOOP_PROGRESS  = false;
+    private static final boolean ENABLE_DRAW_MICS          = true && !ENABLE_EVERLOOP_PROGRESS;
+    private static final boolean ENABLE_LOG_SENSORS        = false;
+    private static final boolean ENABLE_MICARRAY_RECORD    = false; // use 1024 samples for ~8 sec
+    private static final boolean ENABLE_CONTINOUNS_CAPTURE = true && !ENABLE_MICARRAY_RECORD;
+    private static final int     INTERVAL_POLLING_MS       = 500;
 
     private Handler mHandler = new Handler();
     private SpiDevice spiDevice;
@@ -95,13 +96,13 @@ public class MainActivity extends Activity {
         uvSensor = new UV(wb);
 
         // TODO: autodetection of hat via SPI register
-        everloop = new Everloop(wb,Everloop.MATRIX_CREATOR); // NOTE: please change to right board
+        everloop = new Everloop(wb); // NOTE: please change to right board
         everloop.clear();
         everloop.write();
 
         micArray = new MicArray(wb,service);
         Log.d(TAG,"[MIC] starting capture..");
-        micArray.capture(7,2,true,onMicArrayListener);
+        micArray.capture(7,2,ENABLE_CONTINOUNS_CAPTURE,onMicArrayListener);
     }
 
     private boolean configSPI(PeripheralManagerService service){
@@ -132,7 +133,7 @@ public class MainActivity extends Activity {
 //            Log.d(TAG, "[MIC] mic:"+mic+" size :"+mic_data.size());
 //            Log.d(TAG, "[MIC] mic:"+mic+" data :"+mic_data.toString());
             // TODO: write to SD not work! GT not support EXTERNALSTORAGE permission
-            if(ENABLE_MICARRAY_DEBUG)micArray.sendDataToDebugIp(mic);
+            if(ENABLE_MICARRAY_RECORD)micArray.sendDataToDebugIp(mic);
             else micArray.clear();
         }
 
