@@ -59,10 +59,10 @@ public class MainActivity extends Activity {
 
     private static final boolean ENABLE_EVERLOOP_PROGRESS  = false;
     private static final boolean ENABLE_DRAW_MICS          = true && !ENABLE_EVERLOOP_PROGRESS;
-    private static final boolean ENABLE_LOG_SENSORS        = false;
-    private static final boolean ENABLE_MICARRAY_RECORD    = false; // use 1024 samples for ~8 sec
-    private static final boolean ENABLE_CONTINOUNS_CAPTURE = true && !ENABLE_MICARRAY_RECORD;
-    private static final int     INTERVAL_POLLING_MS       = 500;
+    private static final boolean ENABLE_LOG_SENSORS        = true && Config.MATRIX_CREATOR;
+    private static final boolean ENABLE_MICARRAY_RECORD    = false; // true => 1024 samples ~8 sec
+    private static final boolean ENABLE_CONTINOUNS_CAPTURE = !ENABLE_MICARRAY_RECORD;
+    private static final int     INTERVAL_POLLING_MS       = 1000;
 
     private Handler mHandler = new Handler();
     private SpiDevice spiDevice;
@@ -102,7 +102,9 @@ public class MainActivity extends Activity {
 
         micArray = new MicArray(wb,service);
         Log.d(TAG,"[MIC] starting capture..");
-        micArray.capture(7,2,ENABLE_CONTINOUNS_CAPTURE,onMicArrayListener);
+        int samples = 2;
+        if(ENABLE_MICARRAY_RECORD) samples=1024;
+        micArray.capture(7,samples,ENABLE_CONTINOUNS_CAPTURE,onMicArrayListener);
     }
 
     private boolean configSPI(PeripheralManagerService service){

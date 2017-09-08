@@ -1,7 +1,7 @@
 MATRIX-Creator and MATRIX-Voice Android Things (BETA)
 =====================================
 
-This Android Things app runs basic tests for MATRIX sensors, Everloop ring LEDs and mic array.
+This Android Things app runs basic tests for MATRIX Creator sensors and mic array output via Everloop LEDs.
 
 Status
 ------
@@ -10,6 +10,7 @@ Status
 - [X] Automatic FPGA initialization (MATRIXVoice only)
 - [X] All sensors
 - [X] Everloop control
+- [X] Mic Array continuous capture (mics showed on Everloop)
 - [X] Mic Array (all mics, output to IP Address, please see notes)
 - [ ] Zigbee driver
 - [ ] Z-Wave driver
@@ -94,8 +95,7 @@ On your pc:
     
 - if you shutdown your raspberryPi, please repeat steps: 2 and 6. (root and reprograming FPGA)
 
-Run demo application
------------------------------------------
+### Run demo application
 
 From this point your have a basic Android Things project, for launch Demo (MatrixCreatorGT app) please execute this from main directory:
 
@@ -103,10 +103,17 @@ From this point your have a basic Android Things project, for launch Demo (Matri
     ./gradlew installDebug
     adb shell am start admobilize.matrix.gt/.MainActivity
 ```
-on your adb logcat will obtain sensors status and everloop leds will be animated.
 
-Micarray tests
------------------------------------------
+on your adb logcat will obtain sensors status and everloop leds will show mic status. Add filter `HM` 
+regex for sensors for example, for mic array data you can filter with `MIC` regex, the output is like this:
+
+```java
+    UV: 0.0066934405	AL: 2473.4375	PR: 74932.75	TP: 38.0625	HM: 73.195694	TP: 34.77271	YW: 82.34981	PT: 2.3185472	RL: 6.3011737	
+    UV: 0.0066934405	AL: 2473.4375	PR: 74935.25	TP: 38.0625	HM: 73.195694	TP: 34.77271	YW: 82.52538	PT: 2.36045	RL: 6.333514	
+    UV: 0.0066934405	AL: 2473.375	PR: 74933.75	TP: 38.0625	HM: 73.196396	TP: 34.79062	YW: 83.13602	PT: 2.2451632	RL: 6.46383	
+```
+
+### Micarray record (optional)
 
 You can test mics and capture sound via `netcat` command on another machine for now, because
 AndroidThings not have or not support `EXTERNALSTORAGE` permissions for save captures.
@@ -118,9 +125,9 @@ AndroidThings not have or not support `EXTERNALSTORAGE` permissions for save cap
     public static final int EXTERNAL_DEBUG_PORT = 2999;
     ```
 
-2. Enable debug flag on `MainActivity` class:
+2. Enable `record` flag on `MainActivity` class:
     ```java
-    private static final boolean ENABLE_MICARRAY_DEBUG    = true;
+    private static final boolean ENABLE_MICARRAY_RECORD    = true; // 1024 samples ~8 sec
     ```
 
 3. Run netcat on your PC like this: 
@@ -152,7 +159,7 @@ AndroidThings not have or not support `EXTERNALSTORAGE` permissions for save cap
      D/MainActivity: [MIC] mic:6 size: 131072
      D/MainActivity: [MIC] mic:7 size: 131072
     ```
-5. When nc come back to shell your obtain mic data, then reconvert and play it with:
+5. When `netcat` come back to shell your obtain mic data, then reconvert and play it with:
     ```bash
     sox -r 16000 -c 1 -e signed  -b 16 audio.raw audio.wav
     aplay audio.wav
