@@ -3,6 +3,8 @@ package admobilize.matrix.gt.matrix;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import admobilize.matrix.gt.Config;
+
 /**
  * Created by Antonio Vanegas @hpsaturn on 12/21/16.
  */
@@ -12,12 +14,12 @@ public class Everloop extends SensorBase {
     public ArrayList<Everloop.LedValue> ledImage = new ArrayList<>();
     private boolean toggleColor;
     private int led_count=35;
-    public static int MATRIX_CREATOR = 0;
-    public static int MATRIX_VOICE = 1;
 
-    public Everloop(Wishbone wb,int matrix_board_type) {
+    public Everloop(Wishbone wb) {
         super(wb);
-        if(matrix_board_type==MATRIX_VOICE)led_count=18;
+        if(!Config.MATRIX_CREATOR){
+            this.led_count=18;
+        }
         init();
     }
 
@@ -73,20 +75,44 @@ public class Everloop extends SensorBase {
 
     public void drawMicArrayEnergy(ArrayList<Short> mic_array_energy){
         ledImage.clear();
-        Iterator<Short> it = mic_array_energy.iterator();
-        int mic=0;
-        while(it.hasNext()) {
-            addMicSeperator();
-            addMicSegment(it.next()); // mic energy
-            if(mic==2)addMicSeperator();
-            if(mic==5)addMicSeperator();
-            mic++;
+        if(Config.MATRIX_CREATOR) {
+            Iterator<Short> it = mic_array_energy.iterator();
+            int mic = 0;
+            while (it.hasNext()) {
+                addMicSeperator();
+                addMicSegment(it.next()); // mic energy
+                if (mic == 2 && Config.MATRIX_CREATOR) addMicSeperator();
+                if (mic == 5 && Config.MATRIX_CREATOR) addMicSeperator();
+                mic++;
+            }
+            if (Config.MATRIX_CREATOR) addMicSeperator();
         }
-        addMicSeperator();
+        else{
+            addMicSegment(mic_array_energy.get(1));
+            addMicSeperator();
+            addMicSegment(mic_array_energy.get(2));
+            addMicSeperator();
+            addMicSeperator();
+            addMicSegment(mic_array_energy.get(3));
+            addMicSeperator();
+            addMicSegment(mic_array_energy.get(4));
+            addMicSeperator();
+            addMicSeperator();
+            addMicSegment(mic_array_energy.get(5));
+            addMicSeperator();
+            addMicSeperator();
+            addMicSegment(mic_array_energy.get(6));
+            addMicSeperator();
+            addMicSegment(mic_array_energy.get(7));
+            addMicSeperator();
+            addMicSegment(mic_array_energy.get(0));
+        }
     }
 
     private void addMicSegment(short m0) {
-        for (int i=0;i<3;i++){
+        int step=3;
+        if(!Config.MATRIX_CREATOR)step=1;
+        for (int i = 0; i<step; i++){
             LedValue ledM0 = new LedValue();
             if(100<m0 && m0<8192)
                 ledM0 = new LedValue(getLedValueFromEnergy(m0)/3, 4, 0, 0);
