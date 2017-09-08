@@ -48,6 +48,7 @@ public class MicArray extends SensorBase {
     private ArrayList<ArrayDeque>micarray=new ArrayList<>();
     private Gpio gpio;
     private OnMicArrayListener listener;
+    private boolean continuous;
 
 
     public MicArray(Wishbone wb, PeripheralManagerService service) {
@@ -68,10 +69,11 @@ public class MicArray extends SensorBase {
         void onCaptureAll(ArrayList<ArrayDeque>mic_array);
     }
 
-    public void capture(int mic,int samples, OnMicArrayListener listener ){
+    public void capture(int mic,int samples, boolean continuous, OnMicArrayListener listener ){
         this.current_mic=mic;
         this.max_irq_samples=samples;
         this.irq_samples=0;
+        this.continuous=continuous;
         this.listener=listener;
 
         try {
@@ -101,10 +103,11 @@ public class MicArray extends SensorBase {
                 read();
             }
             else if(irq_samples==max_irq_samples) {
-                Log.i(TAG,"[MIC] "+max_irq_samples+" samples ready");
+                if(DEBUG)Log.i(TAG,"[MIC] "+max_irq_samples+" samples ready");
                 listener.onCaptureAll(micarray);
                 listener.onCapture(current_mic,micarray.get(current_mic));
-                irq_samples=max_irq_samples+1; // STOP CALLBACK
+                if(continuous)irq_samples=0; // START AGAIN
+                else irq_samples=max_irq_samples+1; // STOP CALLBACK
             }
             return super.onGpioEdge(gpio);
         }
@@ -138,6 +141,8 @@ public class MicArray extends SensorBase {
             mic7.add(ByteBuffer.wrap(data,(i*8+7)*2,2).order(ByteOrder.BIG_ENDIAN).getShort());
         }
     }
+
+
 
     public void sendDataToDebugIp(int mic){
         // TODO: write to SD not work! GT not support EXTERNALSTORAGE permission
