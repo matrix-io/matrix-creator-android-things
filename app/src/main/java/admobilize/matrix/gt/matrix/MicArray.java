@@ -6,6 +6,9 @@ import android.util.Log;
 import com.google.android.things.pio.Gpio;
 import com.google.android.things.pio.GpioCallback;
 import com.google.android.things.pio.PeripheralManagerService;
+import com.google.android.things.pio.SpiDevice;
+import com.google.android.things.pio.UartDevice;
+import com.google.android.things.userdriver.AudioInputDriver;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -25,7 +28,7 @@ import admobilize.matrix.gt.Config;
  * Created by Antonio Vanegas @hpsaturn on 12/20/16.
  */
 
-public class MicArray extends SensorBase {
+public class MicArray extends SensorBase implements AudioInputDriver{
 
     private static final String TAG = MicArray.class.getSimpleName();
     private static final boolean DEBUG = Config.DEBUG;
@@ -50,8 +53,10 @@ public class MicArray extends SensorBase {
     private OnMicArrayListener listener;
     private boolean continuous;
 
+    private SpiDevice mDevice;
 
-    public MicArray(Wishbone wb, PeripheralManagerService service) {
+
+    public MicArray(Wishbone wb, PeripheralManagerService service, SpiDevice input) {
         super(wb);
         if(Config.MATRIX_CREATOR) {
             micarray.add(mic3);  // Order for MEMs position on the board
@@ -72,7 +77,23 @@ public class MicArray extends SensorBase {
             micarray.add(mic6);
             micarray.add(mic7);
         }
+        this.mDevice=input;
         configMicDataInterrupt(service);
+    }
+
+    @Override
+    public void onStandbyChanged(boolean b) {
+
+    }
+
+    @Override
+    public int read(ByteBuffer byteBuffer, int i) {
+        try {
+            mDevice.read(byteBuffer.array(),i);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return 0;
     }
 
     public interface OnMicArrayListener{
