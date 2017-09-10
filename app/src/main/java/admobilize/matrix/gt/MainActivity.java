@@ -18,6 +18,7 @@
 package admobilize.matrix.gt;
 
 import android.app.Activity;
+import android.media.AudioFormat;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -35,6 +36,7 @@ import admobilize.matrix.gt.matrix.Everloop;
 import admobilize.matrix.gt.matrix.Humidity;
 import admobilize.matrix.gt.matrix.IMU;
 import admobilize.matrix.gt.matrix.MicArray;
+import admobilize.matrix.gt.matrix.MicArrayDriver;
 import admobilize.matrix.gt.matrix.Pressure;
 import admobilize.matrix.gt.matrix.UV;
 import admobilize.matrix.gt.matrix.Wishbone;
@@ -45,21 +47,23 @@ import admobilize.matrix.gt.matrix.Wishbone;
  * REQUIREMENTS:
  *
  * - MatrixCreator Google Things image on RaspberryPi3
- * - MATRIXVoice Hat
+ * - MATRIXCreator or MATRIXVoice Hat (see README.md file)
  *
  * Created by Antonio Vanegas @hpsaturn on 12/19/16.
  *
  *  rev20170817 refactor for MATRIXVoice hat
  *  rev20170901 micarray working, all mics
+ *  rev20170908 mics energy on Everloop, support two boards
  */
 
 public class MainActivity extends Activity {
+
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final boolean DEBUG = Config.DEBUG;
 
     private static final boolean ENABLE_EVERLOOP_PROGRESS  = false;
     private static final boolean ENABLE_DRAW_MICS          = true && !ENABLE_EVERLOOP_PROGRESS;
-    private static final boolean ENABLE_LOG_SENSORS        = true && Config.MATRIX_CREATOR;
+    private static final boolean ENABLE_LOG_SENSORS        = false && Config.MATRIX_CREATOR;
     private static final boolean ENABLE_MICARRAY_RECORD    = false; // true => 1024 samples ~8 sec
     private static final boolean ENABLE_CONTINOUNS_CAPTURE = !ENABLE_MICARRAY_RECORD;
     private static final int     INTERVAL_POLLING_MS       = 1000;
@@ -73,6 +77,7 @@ public class MainActivity extends Activity {
     private Humidity humidity;
     private IMU imuSensor;
     private UV uvSensor;
+    private MicArrayDriver mMicArrayDriver;
 
 
     @Override
@@ -82,7 +87,7 @@ public class MainActivity extends Activity {
 
         PeripheralManagerService service = new PeripheralManagerService();
         while(!configSPI(service)){
-            Log.d(TAG, "waiting for SPI..");
+            Log.i(TAG, "waiting for SPI..");
         }
         wb=new Wishbone(spiDevice);
         initDevices(service);
@@ -100,11 +105,13 @@ public class MainActivity extends Activity {
         everloop.clear();
         everloop.write();
 
-        micArray = new MicArray(wb,service);
+        micArray = new MicArray(wb);
         Log.d(TAG,"[MIC] starting capture..");
         int samples = 2;
         if(ENABLE_MICARRAY_RECORD) samples=1024;
-        micArray.capture(7,samples,ENABLE_CONTINOUNS_CAPTURE,onMicArrayListener);
+        micArray.capture(7, samples, ENABLE_CONTINOUNS_CAPTURE, onMicArrayListener);
+//        mMicArrayDriver = new MicArrayDriver(micArray);
+//        mMicArrayDriver.registerAudioInputDriver();
     }
 
     private boolean configSPI(PeripheralManagerService service){
@@ -122,8 +129,7 @@ public class MainActivity extends Activity {
                 return true;
             }
         } catch (IOException e) {
-            Log.e(TAG, "Error on PeripheralIO API (SPI)", e);
-            e.printStackTrace();
+            Log.e(TAG, "Error on PeripheralIO API (SPI)..");
         }
 
         return false;
@@ -219,8 +225,11 @@ public class MainActivity extends Activity {
             everloop.clear();
             everloop.write();
             spiDevice.close();
+            mMicArrayDriver.close();
         } catch (IOException e) {
             Log.e(TAG, "Error on PeripheralIO API", e);
+        } catch (Exception e) {
+            Log.e(TAG, "Error on MicArrayDriver close", e);
         }
     }
 

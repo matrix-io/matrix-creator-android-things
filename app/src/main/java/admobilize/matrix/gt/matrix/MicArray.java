@@ -28,7 +28,7 @@ import admobilize.matrix.gt.Config;
  * Created by Antonio Vanegas @hpsaturn on 12/20/16.
  */
 
-public class MicArray extends SensorBase implements AudioInputDriver{
+public class MicArray extends SensorBase {
 
     private static final String TAG = MicArray.class.getSimpleName();
     private static final boolean DEBUG = Config.DEBUG;
@@ -53,10 +53,9 @@ public class MicArray extends SensorBase implements AudioInputDriver{
     private OnMicArrayListener listener;
     private boolean continuous;
 
-    private SpiDevice mDevice;
 
 
-    public MicArray(Wishbone wb, PeripheralManagerService service, SpiDevice input) {
+    public MicArray(Wishbone wb) {
         super(wb);
         if(Config.MATRIX_CREATOR) {
             micarray.add(mic3);  // Order for MEMs position on the board
@@ -77,24 +76,9 @@ public class MicArray extends SensorBase implements AudioInputDriver{
             micarray.add(mic6);
             micarray.add(mic7);
         }
-        this.mDevice=input;
-        configMicDataInterrupt(service);
+        configMicDataInterrupt();
     }
 
-    @Override
-    public void onStandbyChanged(boolean b) {
-
-    }
-
-    @Override
-    public int read(ByteBuffer byteBuffer, int i) {
-        try {
-            mDevice.read(byteBuffer.array(),i);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return 0;
-    }
 
     public interface OnMicArrayListener{
         void onCapture(int mic, ArrayDeque<Short>mic_data);
@@ -115,8 +99,9 @@ public class MicArray extends SensorBase implements AudioInputDriver{
         }
     }
 
-    private void configMicDataInterrupt(PeripheralManagerService service){
+    private void configMicDataInterrupt(){
         try {
+            PeripheralManagerService service = new PeripheralManagerService();
             gpio = service.openGpio(BoardDefaults.getGPIO_MIC_DATA());
             gpio.setDirection(Gpio.DIRECTION_IN);
             gpio.setActiveType(Gpio.ACTIVE_LOW);
@@ -159,6 +144,11 @@ public class MicArray extends SensorBase implements AudioInputDriver{
             inRead = false;
         }else
             Log.w(TAG,"[MIC] skip read data!");
+    }
+
+    public int read(ByteBuffer byteBuffer, int i) throws IOException{
+        Log.w(TAG,"[MIC] read ByteBuffer, pos: "+i+" "+byteBuffer.toString());
+        return 1;
     }
 
     private void appendData(){
