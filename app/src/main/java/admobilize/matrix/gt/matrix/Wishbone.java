@@ -23,7 +23,12 @@ public class Wishbone {
     private byte[] rx_buffer_ = new byte[4096];
 
     private final Lock _mutex = new ReentrantLock(true);
+
     private SpiDevice spiDevice;
+
+    public SpiDevice getSpiDevice() {
+        return spiDevice;
+    }
 
     public Wishbone(SpiDevice spiDevice) {
         this.spiDevice = spiDevice;
