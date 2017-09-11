@@ -18,7 +18,6 @@
 package admobilize.matrix.gt;
 
 import android.app.Activity;
-import android.media.AudioFormat;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -110,8 +109,9 @@ public class MainActivity extends Activity {
         int samples = 2;
         if(ENABLE_MICARRAY_RECORD) samples=1024;
         micArray.capture(7, samples, ENABLE_CONTINOUNS_CAPTURE, onMicArrayListener);
-//        mMicArrayDriver = new MicArrayDriver(micArray);
-//        mMicArrayDriver.registerAudioInputDriver();
+        mMicArrayDriver = new MicArrayDriver(micArray);
+        mMicArrayDriver.registerAudioInputDriver();
+        mMicArrayDriver.startRecording();
     }
 
     private boolean configSPI(PeripheralManagerService service){
@@ -135,6 +135,7 @@ public class MainActivity extends Activity {
         return false;
     }
 
+
     private MicArray.OnMicArrayListener onMicArrayListener =  new MicArray.OnMicArrayListener() {
         @Override
         public void onCapture(int mic, ArrayDeque<Short> mic_data) {
@@ -147,14 +148,14 @@ public class MainActivity extends Activity {
 
         @Override
         public void onCaptureAll(ArrayList<ArrayDeque> mic_array) {
-            if(DEBUG)Log.d(TAG, "[MIC] all mics data size:");
+//            if(DEBUG)Log.d(TAG, "[MIC] all mics data size:");
             Iterator<ArrayDeque> it = mic_array.iterator();
             int mic=0;
             ArrayList<Short>micArrayEnergy=new ArrayList<>();
             while (it.hasNext()){
                 short energy = getEnergy(it.next());
                 micArrayEnergy.add(energy);
-                if(DEBUG)Log.d(TAG, "[MIC] mic:"+mic+++" energy "+energy);
+//                if(DEBUG)Log.d(TAG, "[MIC] mic:"+mic+++" energy "+energy);
             }
             if(ENABLE_DRAW_MICS) {
                 everloop.drawMicArrayEnergy(micArrayEnergy);

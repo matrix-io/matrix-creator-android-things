@@ -120,7 +120,7 @@ public class MicArray extends SensorBase {
                 read();
             }
             else if(irq_samples==max_irq_samples) {
-                if(DEBUG)Log.i(TAG,"[MIC] "+max_irq_samples+" samples ready");
+//                if(DEBUG)Log.i(TAG,"[MIC] "+max_irq_samples+" samples ready");
                 listener.onCaptureAll(micarray);
                 listener.onCapture(current_mic,micarray.get(current_mic));
                 if(continuous)irq_samples=0; // START AGAIN
