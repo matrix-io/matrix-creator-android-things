@@ -53,8 +53,6 @@ public class MicArray extends SensorBase {
     private OnMicArrayListener listener;
     private boolean continuous;
 
-
-
     public MicArray(Wishbone wb) {
         super(wb);
         if(Config.MATRIX_CREATOR) {
@@ -147,12 +145,28 @@ public class MicArray extends SensorBase {
     }
 
     public int read(ByteBuffer byteBuffer, int i) throws IOException{
-        Log.w(TAG,"[MIC] read ByteBuffer, pos: "+i+" "+byteBuffer.toString());
-        return 1;
+        if(!inRead&&data.length>0){
+            for (int j=0;j<128;j++){
+                byteBuffer.put(j,ByteBuffer.wrap(data,(j*8+0)*2,2).order(ByteOrder.BIG_ENDIAN).get());
+            }
+        }
+
+        String data = "";
+        for (int x=0;x<byteBuffer.capacity();x++){
+            data=data+byteBuffer.get(x);
+        }
+        Log.d(TAG, "[MIC] byteBuffer data: "+data);
+
+//        Log.w(TAG,"[MIC] ByteBuffer, pos: "+i+" "+byteBuffer.capacity());
+        return 0;
     }
 
     private void appendData(){
         for (int i=0;i<128;i++){
+            if(mic0.size()==128){
+                Iterator<ArrayDeque> it = micarray.iterator();
+                while (it.hasNext())it.next().poll();
+            }
             mic0.add(ByteBuffer.wrap(data,(i*8+0)*2,2).order(ByteOrder.BIG_ENDIAN).getShort());
             mic1.add(ByteBuffer.wrap(data,(i*8+1)*2,2).order(ByteOrder.BIG_ENDIAN).getShort());
             mic2.add(ByteBuffer.wrap(data,(i*8+2)*2,2).order(ByteOrder.BIG_ENDIAN).getShort());

@@ -143,7 +143,6 @@ public class MainActivity extends Activity {
 //            Log.d(TAG, "[MIC] mic:"+mic+" data :"+mic_data.toString());
             // TODO: write to SD not work! GT not support EXTERNALSTORAGE permission
             if(ENABLE_MICARRAY_RECORD)micArray.sendDataToDebugIp(mic);
-            else micArray.clear();
         }
 
         @Override
@@ -208,8 +207,13 @@ public class MainActivity extends Activity {
             if(ENABLE_EVERLOOP_PROGRESS) {
                 everloop.drawProgress((int) counter);
                 everloop.write();
-                counter++;
             }
+
+            counter++;
+
+            if(counter==5)mMicArrayDriver.stopRecording();
+            if(counter==10)mMicArrayDriver.saveRecording();
+
             // Reschedule the same runnable in {#INTERVAL_POLLING_MS} milliseconds
             mHandler.postDelayed(mPollingRunnable, INTERVAL_POLLING_MS);
 
