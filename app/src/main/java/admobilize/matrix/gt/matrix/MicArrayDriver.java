@@ -31,12 +31,13 @@ public class MicArrayDriver implements AutoCloseable {
     private static final int BUFFER_SIZE = 96000 / 20;
     // buffer of 0.5 sec of sample data at 48khz / 16bit.
     private static final int FLUSH_SIZE = 48000;
+    private static final int BUFFER_MATRIX = 128;
     private static final int SAMPLE_BLOCK_SIZE = 128;
 
     private AudioRecord mAudioRecord = new AudioRecord.Builder()
                 .setAudioSource(MediaRecorder.AudioSource.MIC)
                 .setAudioFormat(AUDIO_FORMAT_IN_MONO)
-                .setBufferSizeInBytes(BUFFER_SIZE)
+                .setBufferSizeInBytes(BUFFER_MATRIX)
                 .build();
 
     private MicArray micArray;
@@ -93,7 +94,7 @@ public class MicArrayDriver implements AutoCloseable {
     public void registerAudioInputDriver() {
         mAudioInputDriver = new AudioInputUserDriver();
         UserDriverManager.getManager().registerAudioInputDriver(mAudioInputDriver, AUDIO_FORMAT_IN_MONO,
-                AudioDeviceInfo.TYPE_BUILTIN_MIC, BUFFER_SIZE);
+                AudioDeviceInfo.TYPE_BUILTIN_MIC, BUFFER_MATRIX);
     }
 
     public void unregisterAudioInputDriver() {
@@ -103,9 +104,17 @@ public class MicArrayDriver implements AutoCloseable {
         }
     }
 
-    public void startRecording() {
+    public void startRecording(){
+        mAudioRecord.startRecording();
+    }
+
+    public void stopRecording(){
+        mAudioRecord.stop();
+    }
+
+    public void saveRecording() {
         // Start recording audio.
-        Log.d(TAG, "[MIC] startRecording..");
+        Log.d(TAG, "[MIC] saveRecording..");
         mAssistantThread = new HandlerThread("assistantThread");
         mAssistantThread.start();
         mAssistantHandler = new Handler(mAssistantThread.getLooper());
@@ -115,16 +124,22 @@ public class MicArrayDriver implements AutoCloseable {
     private Runnable mStreamAssistantRequest = new Runnable() {
         @Override
         public void run() {
+            Log.d(TAG, "[MIC] saveRecording thread..");
             ByteBuffer audioData = ByteBuffer.allocateDirect(SAMPLE_BLOCK_SIZE);
             int result = mAudioRecord.read(audioData, audioData.capacity(), AudioRecord.READ_BLOCKING);
             if (result < 0) {
-                Log.e(TAG, "error reading from audio stream:" + result);
+                Log.e(TAG, "[MIC] error reading from audio stream:" + result);
                 return;
             }
-            Log.d(TAG, "streaming ConverseRequest: " + result);
+            Log.d(TAG, "[MIC] streaming ConverseRequest: " + result);
             Log.d(TAG, "[MIC] result: "+result);
-            Log.d(TAG, "[MIC] audioData: "+audioData.capacity());
-            Log.d(TAG, "[MIC] audioData: "+audioData.array());
+            Log.d(TAG, "[MIC] audioData capacity: "+audioData.capacity());
+            String data = "";
+            for (int i=0;i<audioData.capacity();i++){
+               data=data+audioData.get(i);
+            }
+            Log.d(TAG, "[MIC] audioData data: "+data);
+
         }
     };
 
