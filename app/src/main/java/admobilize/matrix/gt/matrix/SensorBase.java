@@ -15,7 +15,7 @@ public abstract class SensorBase {
 
     // FPGA Wishbone address map
     public int kMicrophoneArrayBaseAddress = 0x1800;
-    public int kEverloopBaseAddress = 0x2000;
+    public int kEverloopBaseAddress = 0x3000;
     public int kGPIOBaseAddress = 0x2800;
     public int kMCUBaseAddress = 0x3800;
 
