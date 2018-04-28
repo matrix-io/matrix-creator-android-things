@@ -5,7 +5,7 @@ import android.os.Build;
 import android.util.Log;
 
 import com.google.android.things.pio.Gpio;
-import com.google.android.things.pio.PeripheralManagerService;
+import com.google.android.things.pio.PeripheralManager;
 import com.google.android.things.pio.SpiDevice;
 
 import java.io.File;
@@ -28,7 +28,7 @@ public class JNIPrimitives {
     private static final boolean DEBUG = Config.DEBUG;
 
     private final Context ctx;
-    private PeripheralManagerService service;
+    private PeripheralManager service;
     private SpiDevice spiDevice;
     private String sytemPath;
 
@@ -40,7 +40,7 @@ public class JNIPrimitives {
     private Gpio mLedGpio;
 
 
-    public JNIPrimitives(Context ctx, PeripheralManagerService service, SpiDevice spiDevice) {
+    public JNIPrimitives(Context ctx, PeripheralManager service, SpiDevice spiDevice) {
         this.ctx = ctx;
         this.service = service;
         this.spiDevice = spiDevice;

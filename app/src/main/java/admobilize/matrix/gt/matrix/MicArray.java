@@ -5,7 +5,7 @@ import android.util.Log;
 
 import com.google.android.things.pio.Gpio;
 import com.google.android.things.pio.GpioCallback;
-import com.google.android.things.pio.PeripheralManagerService;
+import com.google.android.things.pio.PeripheralManager;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -51,7 +51,7 @@ public class MicArray extends SensorBase {
     private boolean continuous;
 
 
-    public MicArray(Wishbone wb, PeripheralManagerService service) {
+    public MicArray(Wishbone wb, PeripheralManager service) {
         super(wb);
         if(Config.MATRIX_CREATOR) {
             micarray.add(mic3);  // Order for MEMs position on the board
@@ -94,7 +94,7 @@ public class MicArray extends SensorBase {
         }
     }
 
-    private void configMicDataInterrupt(PeripheralManagerService service){
+    private void configMicDataInterrupt(PeripheralManager service){
         try {
             gpio = service.openGpio(BoardDefaults.getGPIO_MIC_DATA());
             gpio.setDirection(Gpio.DIRECTION_IN);
@@ -120,11 +120,12 @@ public class MicArray extends SensorBase {
                 if(continuous)irq_samples=0; // START AGAIN
                 else irq_samples=max_irq_samples+1; // STOP CALLBACK
             }
-            return super.onGpioEdge(gpio);
+//            return super.onGpioEdge(gpio);
+            return true;
         }
         @Override
         public void onGpioError(Gpio gpio, int error) {
-            super.onGpioError(gpio, error);
+//            super.onGpioError(gpio, error);
             Log.w(TAG, "[MIC] onMicDataCallback error event: "+gpio + "==>" + error);
         }
     };

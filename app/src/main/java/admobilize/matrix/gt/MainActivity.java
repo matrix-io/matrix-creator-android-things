@@ -22,7 +22,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 
-import com.google.android.things.pio.PeripheralManagerService;
+import com.google.android.things.pio.PeripheralManager;
 import com.google.android.things.pio.SpiDevice;
 
 import java.io.IOException;
@@ -57,9 +57,9 @@ public class MainActivity extends Activity {
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final boolean DEBUG = Config.DEBUG;
 
-    private static final boolean ENABLE_EVERLOOP_PROGRESS  = false;
-    private static final boolean ENABLE_DRAW_MICS          = true && !ENABLE_EVERLOOP_PROGRESS;
-    private static final boolean ENABLE_LOG_SENSORS        = true && Config.MATRIX_CREATOR;
+    private static final boolean ENABLE_EVERLOOP_PROGRESS  = true;
+    private static final boolean ENABLE_DRAW_MICS          = false && !ENABLE_EVERLOOP_PROGRESS;
+    private static final boolean ENABLE_LOG_SENSORS        = false && Config.MATRIX_CREATOR;
     private static final boolean ENABLE_MICARRAY_RECORD    = false; // true => 1024 samples ~8 sec
     private static final boolean ENABLE_CONTINOUNS_CAPTURE = !ENABLE_MICARRAY_RECORD;
     private static final int     INTERVAL_POLLING_MS       = 1000;
@@ -80,7 +80,7 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         Log.i(TAG, "Starting Matrix-Creator device config..");
 
-        PeripheralManagerService service = new PeripheralManagerService();
+        PeripheralManager service = PeripheralManager.getInstance();
         while(!configSPI(service)){
             Log.d(TAG, "waiting for SPI..");
         }
@@ -89,7 +89,7 @@ public class MainActivity extends Activity {
         mHandler.post(mPollingRunnable);
     }
 
-    private void initDevices(PeripheralManagerService service) {
+    private void initDevices(PeripheralManager service) {
         pressure = new Pressure(wb);
         humidity = new Humidity(wb);
         imuSensor = new IMU(wb);
@@ -107,7 +107,7 @@ public class MainActivity extends Activity {
         micArray.capture(7,samples,ENABLE_CONTINOUNS_CAPTURE,onMicArrayListener);
     }
 
-    private boolean configSPI(PeripheralManagerService service){
+    private boolean configSPI(PeripheralManager service){
         try {
             List<String> deviceList = service.getSpiBusList();
             if (deviceList.isEmpty()) {
@@ -118,7 +118,7 @@ public class MainActivity extends Activity {
                 spiDevice.setMode(SpiDevice.MODE3);
                 spiDevice.setFrequency(18000000);     // 18MHz
                 spiDevice.setBitsPerWord(8);          // 8 BP
-                spiDevice.setBitJustification(false); // MSB first
+//                spiDevice.setBitJustification(false); // MSB first
                 return true;
             }
         } catch (IOException e) {
