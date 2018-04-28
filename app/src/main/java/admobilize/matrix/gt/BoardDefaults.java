@@ -18,6 +18,7 @@ package admobilize.matrix.gt;
 
 import android.os.Build;
 
+import com.google.android.things.pio.PeripheralManager;
 import com.google.android.things.pio.PeripheralManagerService;
 
 import java.util.List;
@@ -128,7 +129,7 @@ public class BoardDefaults {
         // For the edison check the pin prefix
         // to always return Edison Breakout pin name when applicable.
         if (sBoardVariant.equals(DEVICE_EDISON)) {
-            PeripheralManagerService pioService = new PeripheralManagerService();
+            PeripheralManager pioService = PeripheralManager.getInstance();
             List<String> gpioList = pioService.getGpioList();
             if (gpioList.size() != 0) {
                 String pin = gpioList.get(0);

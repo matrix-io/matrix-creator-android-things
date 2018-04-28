@@ -9,7 +9,6 @@ import android.os.HandlerThread;
 import android.util.Log;
 
 import com.google.android.things.pio.Gpio;
-import com.google.android.things.userdriver.AudioInputDriver;
 import com.google.android.things.userdriver.UserDriverManager;
 
 import java.io.IOException;
@@ -75,7 +74,7 @@ public class MicArrayDriver implements AutoCloseable {
         unregisterAudioInputDriver();
     }
 
-    private class AudioInputUserDriver extends AudioInputDriver {
+    private class AudioInputUserDriver extends AudioInput {
         @Override
         public void onStandbyChanged(boolean b) {
         }
